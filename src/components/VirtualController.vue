@@ -69,22 +69,7 @@
         </g>
       </svg>
 
-      <!-- LANDSCAPE SELECT BUTTON (Inside Left Container, Bottom Right) -->
-      <button
-        class="hidden landscape:flex absolute -bottom-8 -right-8 w-16 h-16 pointer-events-auto items-center justify-center flex-col gap-1 active:scale-95 transition-transform duration-300"
-        @touchstart.prevent="pressKey(27)"
-        @touchend.prevent="releaseKey(27)"
-        @mousedown.prevent="pressKey(27)"
-        @mouseup.prevent="releaseKey(27)"
-      >
-        <div
-          class="w-12 h-4 rounded-full bg-white/20 backdrop-blur-md border border-white/10 shadow-sm active:bg-white/40 transition-colors -rotate-[25deg]"
-        ></div>
-        <span
-          class="text-[10px] font-bold text-white/50 tracking-widest uppercase font-sans mt-1"
-          >SELECT</span
-        >
-      </button>
+      <!-- LANDSCAPE SELECT BUTTON has been moved to Root Level -->
     </div>
 
     <!-- MENU BUTTON (Responsive) -->
@@ -141,13 +126,11 @@
 
       <!-- START / SELECT PILLS -->
       <div class="flex gap-8">
-        <!-- PORTRAIT SELECT (Escape/27) -->
+        <!-- PORTRAIT SELECT (Home/Menu) -->
         <button
-          class="group flex flex-col items-center gap-2 active:scale-95 transition-transform duration-300 min-w-[44px] min-h-[44px] justify-center"
-          @touchstart.prevent="pressKey(27)"
-          @touchend.prevent="releaseKey(27)"
-          @mousedown.prevent="pressKey(27)"
-          @mouseup.prevent="releaseKey(27)"
+          class="group flex flex-col items-center gap-2 active:scale-95 transition-transform duration-300 min-w-[44px] min-h-[44px] justify-center pointer-events-auto"
+          @click="openMenu"
+          @touchstart.prevent="openMenu"
         >
           <div
             class="w-12 h-4 rounded-full bg-white/20 backdrop-blur-md border border-white/10 shadow-sm active:bg-white/40 transition-colors -rotate-[25deg]"
@@ -179,56 +162,74 @@
 
     <!-- ACTION BUTTONS (Right) -->
     <div
-      class="relative w-36 h-48 small:w-28 small:h-40 pointer-events-auto mr-2 flex items-end justify-end landscape:mr-2"
+      class="relative w-36 h-48 landscape:w-48 landscape:h-56 small:w-36 small:h-48 pointer-events-auto mr-2 flex items-end justify-end landscape:mr-2"
     >
       <!-- Button Container for grouping -->
       <div class="relative w-full h-full">
         <!-- O Button -->
         <button
-          class="absolute bottom-24 right-2 w-20 h-20 small:w-16 small:h-16 rounded-full bg-[rgba(255,0,77,0.15)] shadow-[0_0_15px_rgba(255,255,255,0.3)] backdrop-blur-md active:translate-y-1 active:shadow-none transition-all duration-75 flex items-center justify-center group border border-[#FF004D]/80"
+          class="absolute bottom-24 right-2 landscape:bottom-32 landscape:right-2 w-20 h-20 small:w-16 small:h-16 rounded-full bg-[rgba(255,0,77,0.15)] shadow-[0_0_15px_rgba(255,255,255,0.3)] backdrop-blur-md active:translate-y-1 active:shadow-none transition-all duration-75 flex items-center justify-center group border border-[#FF004D]/80"
           @touchstart.prevent="pressKey(90)"
           @touchend.prevent="releaseKey(90)"
           @mousedown.prevent="pressKey(90)"
           @mouseup.prevent="releaseKey(90)"
         >
           <span
-            class="text-white font-bold text-3xl font-pico opacity-90 group-active:opacity-100 flex items-center justify-center translate-x-[2px] -translate-y-[3px]"
+            class="text-white font-bold text-3xl font-pico opacity-90 group-active:opacity-100 flex items-center justify-center translate-x-[2px] -translate-y-[2px]"
             >O</span
           >
         </button>
 
         <!-- X Button -->
         <button
-          class="absolute bottom-4 right-14 w-20 h-20 small:w-16 small:h-16 rounded-full bg-[rgba(41,173,255,0.15)] shadow-[0_0_15px_rgba(255,255,255,0.3)] backdrop-blur-md active:translate-y-1 active:shadow-none transition-all duration-75 flex items-center justify-center group border border-[#29ADFF]/80"
+          class="absolute bottom-4 right-14 landscape:bottom-9 landscape:right-20 w-20 h-20 small:w-16 small:h-16 rounded-full bg-[rgba(41,173,255,0.15)] shadow-[0_0_15px_rgba(255,255,255,0.3)] backdrop-blur-md active:translate-y-1 active:shadow-none transition-all duration-75 flex items-center justify-center group border border-[#29ADFF]/80"
           @touchstart.prevent="pressKey(88)"
           @touchend.prevent="releaseKey(88)"
           @mousedown.prevent="pressKey(88)"
           @mouseup.prevent="releaseKey(88)"
         >
           <span
-            class="text-white font-bold text-3xl font-pico opacity-90 group-active:opacity-100 flex items-center justify-center translate-x-[2px] -translate-y-[3px]"
+            class="text-white font-bold text-3xl font-pico opacity-90 group-active:opacity-100 flex items-center justify-center translate-x-[2px] -translate-y-[2px]"
             >X</span
-          >
-        </button>
-
-        <!-- LANDSCAPE START BUTTON (Inside Right Container, Bottom Left) -->
-        <button
-          class="hidden landscape:flex absolute -bottom-8 -left-20 w-16 h-16 pointer-events-auto items-center justify-center flex-col gap-1 active:scale-95 transition-transform duration-300"
-          @touchstart.prevent="pressKey(13)"
-          @touchend.prevent="releaseKey(13)"
-          @mousedown.prevent="pressKey(13)"
-          @mouseup.prevent="releaseKey(13)"
-        >
-          <div
-            class="w-12 h-4 rounded-full bg-white/20 backdrop-blur-md border border-white/10 shadow-sm active:bg-white/40 transition-colors -rotate-[25deg]"
-          ></div>
-          <span
-            class="text-[10px] font-bold text-white/50 tracking-widest uppercase font-sans mt-1"
-            >START</span
           >
         </button>
       </div>
     </div>
+
+    <!-- LANDSCAPE NAVIGATION (Root Level - The Bezel Hug) -->
+    <!-- Positioned inward to be closer to game view corners and away from controls -->
+
+    <!-- Landscape Select (Left Side Inward) -->
+    <button
+      class="hidden landscape:flex absolute bottom-8 left-48 w-16 h-16 pointer-events-auto items-center justify-center flex-col gap-1 active:scale-95 transition-transform duration-300"
+      @click="openMenu"
+      @touchstart.prevent="openMenu"
+    >
+      <div
+        class="w-12 h-4 rounded-full bg-white/20 backdrop-blur-md border border-white/10 shadow-sm active:bg-white/40 transition-colors -rotate-[25deg]"
+      ></div>
+      <span
+        class="text-[10px] font-bold text-white/50 tracking-widest uppercase font-sans mt-1"
+        >SELECT</span
+      >
+    </button>
+
+    <!-- Landscape Start (Right Side Inward) -->
+    <button
+      class="hidden landscape:flex absolute bottom-8 right-56 w-16 h-16 pointer-events-auto items-center justify-center flex-col gap-1 active:scale-95 transition-transform duration-300"
+      @touchstart.prevent="pressKey(13)"
+      @touchend.prevent="releaseKey(13)"
+      @mousedown.prevent="pressKey(13)"
+      @mouseup.prevent="releaseKey(13)"
+    >
+      <div
+        class="w-12 h-4 rounded-full bg-white/20 backdrop-blur-md border border-white/10 shadow-sm active:bg-white/40 transition-colors -rotate-[25deg]"
+      ></div>
+      <span
+        class="text-[10px] font-bold text-white/50 tracking-widest uppercase font-sans mt-1"
+        >START</span
+      >
+    </button>
   </div>
 </template>
 
