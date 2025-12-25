@@ -6,6 +6,7 @@
     <!-- # landscape: center left -->
     <div
       class="relative w-40 h-40 small:w-36 small:h-36 ml-2 pointer-events-auto active:scale-95 transition-transform duration-100 ease-out landscape:ml-0 landscape:self-center landscape:justify-self-center touch-action-none landscape:col-start-1"
+      style="-webkit-tap-highlight-color: transparent"
       @touchstart.prevent="handleDpadInput"
       @touchmove.prevent="handleDpadInput"
       @touchend.prevent="handleDpadEnd"
@@ -163,7 +164,8 @@
       >
         <!-- o button -->
         <button
-          class="absolute bottom-24 right-2 landscape:bottom-auto landscape:top-0 landscape:right-0 w-20 h-20 small:w-16 small:h-16 rounded-full bg-[rgba(255,0,77,0.15)] shadow-[0_0_15px_rgba(255,255,255,0.3)] backdrop-blur-md active:translate-y-1 active:shadow-none transition-all duration-75 flex items-center justify-center group border border-[#FF004D]/80"
+          class="absolute bottom-24 right-2 landscape:bottom-auto landscape:top-0 landscape:right-0 w-20 h-20 small:w-16 small:h-16 rounded-full bg-[rgba(255,0,77,0.15)] shadow-[0_0_15px_rgba(255,255,255,0.3)] backdrop-blur-md active:translate-y-1 active:shadow-none transition-all duration-75 flex items-center justify-center group border border-[#FF004D]/80 pointer-events-auto"
+          style="-webkit-tap-highlight-color: transparent"
           @touchstart.prevent="pressKey(90)"
           @touchend.prevent="releaseKey(90)"
           @mousedown.prevent="pressKey(90)"
@@ -177,7 +179,8 @@
 
         <!-- x button -->
         <button
-          class="absolute bottom-4 right-14 landscape:bottom-0 landscape:left-0 w-20 h-20 small:w-16 small:h-16 rounded-full bg-[rgba(41,173,255,0.15)] shadow-[0_0_15px_rgba(255,255,255,0.3)] backdrop-blur-md active:translate-y-1 active:shadow-none transition-all duration-75 flex items-center justify-center group border border-[#29ADFF]/80"
+          class="absolute bottom-4 right-14 landscape:bottom-0 landscape:left-0 w-20 h-20 small:w-16 small:h-16 rounded-full bg-[rgba(41,173,255,0.15)] shadow-[0_0_15px_rgba(255,255,255,0.3)] backdrop-blur-md active:translate-y-1 active:shadow-none transition-all duration-75 flex items-center justify-center group border border-[#29ADFF]/80 pointer-events-auto"
+          style="-webkit-tap-highlight-color: transparent"
           @touchstart.prevent="pressKey(88)"
           @touchend.prevent="releaseKey(88)"
           @mousedown.prevent="pressKey(88)"

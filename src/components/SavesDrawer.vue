@@ -1,12 +1,11 @@
 <template>
   <div
     v-if="isOpen"
-    class="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex justify-end"
-    @click.self="$emit('close')"
+    class="fixed inset-0 z-50 flex justify-end pointer-events-none"
   >
+    <!-- drawer container -->
     <div
-      class="w-full max-w-sm h-full bg-[#111] border-l border-white/10 flex flex-col shadow-2xl transition-transform duration-300 transform"
-      @click.stop
+      class="pointer-events-auto w-screen h-screen md:w-full md:max-w-sm md:h-full bg-[#111]/90 backdrop-blur-3xl saturate-150 border-l border-white/10 flex flex-col shadow-2xl transition-transform duration-300 transform slide-in-right"
     >
       <!-- header -->
       <div
@@ -16,7 +15,7 @@
           SAVES
         </h2>
         <button
-          @click="$emit('close')"
+          @click="closeDrawer"
           class="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 active:bg-white/20 text-white/60 hover:text-white transition-colors"
         >
           ✕
@@ -24,9 +23,19 @@
       </div>
 
       <!-- content -->
-      <div class="p-4 h-[calc(100%-4rem)] overflow-y-auto">
+      <div class="flex-1 overflow-y-auto overscroll-contain p-4 safe-pb">
         <div
-          v-if="saves.length === 0"
+          v-if="loading"
+          class="flex flex-col items-center justify-center py-12 gap-3"
+        >
+          <div
+            class="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"
+          ></div>
+          <span class="text-xs text-white/40 tracking-widest">SCANNING...</span>
+        </div>
+
+        <div
+          v-else-if="saves.length === 0"
           class="flex flex-col items-center justify-center py-12 gap-3 text-white/30"
         >
           <span class="text-4xl">💾</span>
@@ -79,8 +88,8 @@
   <Transition name="fade">
     <div
       v-if="isOpen"
-      @click="$emit('close')"
-      class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+      @click="closeDrawer"
+      class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
     ></div>
   </Transition>
 </template>
@@ -88,11 +97,17 @@
 <script setup>
 import { ref, watch, onMounted } from "vue";
 import { Filesystem, Directory } from "@capacitor/filesystem";
+import { Haptics, ImpactStyle } from "@capacitor/haptics";
 
 const props = defineProps(["isOpen", "cartName"]);
 const emit = defineEmits(["close", "load"]);
 const saves = ref([]);
 const loading = ref(false);
+
+const closeDrawer = () => {
+  emit("close");
+  Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+};
 
 const refreshSaves = async () => {
   if (!props.isOpen) return;
@@ -105,8 +120,6 @@ const refreshSaves = async () => {
       path: "Saves",
       directory: Directory.Documents,
     });
-
-    console.log("📂 [Drawer] Raw Files:", ret.files);
 
     // # normalize name for filtering
     const targetName = (props.cartName || "")
@@ -121,8 +134,6 @@ const refreshSaves = async () => {
           f.name.endsWith(".state") && f.name.toLowerCase().includes(targetName)
       )
       .sort((a, b) => (b.mtime || 0) - (a.mtime || 0)); // newest first
-
-    console.log("📂 [Drawer] Final List:", saves.value);
   } catch (e) {
     console.error("📂 [Drawer] Read Failed:", e);
   } finally {
@@ -144,6 +155,7 @@ onMounted(() => {
 });
 
 const loadSave = (filename) => {
+  Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
   console.log("⚡️ [Drawer] Selected:", filename);
   emit("load", filename);
   emit("close");
@@ -166,5 +178,19 @@ const formatDate = (ms) => new Date(ms).toLocaleString();
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+/* Slide in animation */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.slide-in-right {
+  animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 </style>

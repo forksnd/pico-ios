@@ -199,7 +199,20 @@
           v-if="!loading && games.length === 0"
           class="flex flex-col items-center justify-center py-20 text-center"
         >
-          <span class="text-4xl mb-4 opacity-50">📂</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-12 h-12 mb-4 opacity-50 text-white"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"
+            />
+          </svg>
           <p class="text-white/60 font-medium">No cartridges found</p>
           <p class="text-white/30 text-sm mt-1">
             Import a .p8 or .p8.png to get started
@@ -266,7 +279,26 @@
               v-else
               class="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-white/5 to-transparent"
             >
-              <span class="text-4xl opacity-20">👾</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-12 h-12 opacity-20 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
             </div>
 
             <!-- title band -->
@@ -287,6 +319,13 @@
       </transition-group>
     </div>
 
+    <!-- versions footer -->
+    <div class="mt-12 mb-6 text-center opacity-30">
+      <p class="text-[10px] font-mono uppercase tracking-widest">
+        Pocket8 v1.0
+      </p>
+    </div>
+
     <!-- settings drawer -->
     <transition name="slide-up">
       <div v-if="showSettings" class="fixed inset-0 z-50 flex items-end">
@@ -298,7 +337,7 @@
 
         <!-- sheet -->
         <div
-          class="relative w-full bg-[var(--color-surface)] backdrop-blur-xl rounded-t-3xl border-t border-white/10 p-6 pb-12 shadow-2xl max-h-[80vh] overflow-y-auto"
+          class="relative w-full bg-[var(--color-surface)] backdrop-blur-2xl rounded-t-3xl border-t border-white/10 p-6 pb-12 shadow-2xl max-h-[85vh] overflow-y-auto flex flex-col"
         >
           <!-- handle -->
           <div class="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-6"></div>
@@ -306,27 +345,44 @@
           <h2 class="text-xl font-bold text-white mb-6">Settings</h2>
 
           <!-- manage saves -->
-          <div class="mb-8">
+          <div class="mb-8 flex-1">
             <h3
               class="text-sm font-medium text-white/50 uppercase tracking-wider mb-4"
             >
               Manage Saves
             </h3>
-            <div v-if="saves.length === 0" class="text-white/30 text-sm italic">
+
+            <div v-if="loadingSaves" class="flex justify-center py-8">
+              <div
+                class="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"
+              ></div>
+            </div>
+
+            <div
+              v-else-if="saves.length === 0"
+              class="text-white/30 text-sm italic"
+            >
               No save files found via filesystem scan.
             </div>
-            <div v-else class="space-y-3">
+
+            <transition-group
+              v-else
+              tag="div"
+              name="list"
+              class="space-y-3 relative"
+            >
               <div
                 v-for="save in saves"
-                :key="save"
-                class="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5"
+                :key="save.name"
+                class="group flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 hover:border-white/10 transition-colors"
               >
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 overflow-hidden">
                   <div
-                    class="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center"
+                    class="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center shrink-0"
                   >
                     <svg
-                      class="w-4 h-4 text-blue-400"
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="w-5 h-5 text-indigo-400"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -335,22 +391,101 @@
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         stroke-width="2"
-                        d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 1m0-1l1-3m-4 0l4 4m8 0H5"
+                        d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
                       />
                     </svg>
                   </div>
-                  <span class="text-white text-sm truncate max-w-[200px]">{{
-                    save
-                  }}</span>
+                  <div class="flex flex-col min-w-0">
+                    <span
+                      class="text-white text-sm font-medium truncate font-pico leading-tight"
+                    >
+                      {{ save.simpleName }}
+                    </span>
+                    <span class="text-xs text-white/40 truncate">
+                      {{ save.cartName }} • {{ formatDate(save.mtime) }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex items-center gap-2">
+                  <!-- Load -->
+                  <button
+                    @click="loadState(save)"
+                    class="p-2 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 active:scale-95 transition-all"
+                    title="Load State"
+                  >
+                    <svg
+                      class="w-5 h-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                      />
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </button>
+
+                  <!-- Share -->
+                  <button
+                    @click="shareState(save)"
+                    class="p-2 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 active:scale-95 transition-all"
+                    title="Share File"
+                  >
+                    <svg
+                      class="w-5 h-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                      />
+                    </svg>
+                  </button>
+
+                  <!-- Delete -->
+                  <button
+                    @click.stop="deleteState(save)"
+                    class="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 active:scale-95 transition-all"
+                    title="Delete File"
+                  >
+                    <svg
+                      class="w-5 h-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                  </button>
                 </div>
               </div>
-            </div>
+            </transition-group>
           </div>
 
-          <div class="mb-4">
+          <div class="mt-4">
             <button
               @click="showSettings = false"
-              class="w-full py-4 bg-white/10 rounded-xl text-white font-medium active:bg-white/20"
+              class="w-full py-4 bg-white/10 rounded-xl text-white font-medium active:bg-white/20 hover:bg-white/15 transition-colors"
             >
               Done
             </button>
@@ -367,6 +502,8 @@ import { useRouter } from "vue-router";
 import { useLibraryStore } from "../stores/library";
 import { storeToRefs } from "pinia";
 import { Filesystem, Directory } from "@capacitor/filesystem";
+import { Share } from "@capacitor/share";
+import { Haptics, ImpactStyle } from "@capacitor/haptics";
 
 const router = useRouter();
 const libraryStore = useLibraryStore();
@@ -376,12 +513,14 @@ const { loadLibrary, addCartridge, removeCartridge } = libraryStore; // access a
 const fileInput = ref(null);
 const showSettings = ref(false);
 const saves = ref([]);
+const loadingSaves = ref(false);
 const deleteMode = ref(false);
 
 const sortOptions = [
   { label: "Recently Played", value: "lastPlayed" },
   { label: "Name (A-Z)", value: "name" },
   { label: "Newest", value: "newest" },
+  { label: "Oldest", value: "oldest" },
 ];
 
 onMounted(async () => {
@@ -397,6 +536,7 @@ onMounted(async () => {
 });
 
 function triggerImport() {
+  Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
   fileInput.value.click();
 }
 
@@ -411,11 +551,13 @@ async function handleFileImport(event) {
 }
 
 async function startDeleteMode() {
+  Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
   deleteMode.value = !deleteMode.value;
 }
 
 async function handleDelete(game, event) {
   event.stopPropagation();
+  Haptics.notification({ type: "warning" }).catch(() => {});
   if (confirm(`Delete ${game.name}? This cannot be undone.`)) {
     await removeCartridge(game.name);
   }
@@ -423,18 +565,121 @@ async function handleDelete(game, event) {
 
 async function openSettings() {
   showSettings.value = true;
-  saves.value = []; // reset
+  loadingSaves.value = true;
+  saves.value = [];
+
+  Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+
   try {
     const result = await Filesystem.readdir({
-      path: "Saves", // updated to match architecture
+      path: "Saves",
       directory: Directory.Documents,
     });
-    // ...
-    saves.value = result.files
-      .filter((f) => !f.name.startsWith("."))
-      .map((f) => f.name);
+
+    const parsedFiles = result.files
+      .filter((f) => f.name.endsWith(".state"))
+      .map((f) => {
+        // extract cart name from filename (e.g. "Celeste_manual.state" -> "Celeste")
+        const nameParts = f.name.split("_");
+        const cartName = nameParts[0] || "Unknown";
+        const simpleName = f.name
+          .replace(cartName + "_", "")
+          .replace(".state", "")
+          .replace(/_/g, " ");
+
+        return {
+          name: f.name,
+          uri: f.uri,
+          mtime: f.mtime || Date.now(),
+          size: f.size,
+          cartName: cartName, // for booting
+          simpleName: simpleName || "Quick Save",
+        };
+      });
+
+    // sort newest first
+    saves.value = parsedFiles.sort((a, b) => b.mtime - a.mtime);
   } catch (e) {
-    // no saves folder likely
+    console.error("[Library] Failed to list saves:", e);
+  } finally {
+    loadingSaves.value = false;
+  }
+}
+
+async function loadState(save) {
+  Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
+  console.log("[Library] Booting from state:", save.name);
+
+  // # find cart matching save
+  // we need the full .p8.png filename for the cart.
+  // heuristic: try exact match, then append .p8.png, then .p8
+  // actually, Player.vue expects the FILENAME of the cart in Document/Carts.
+  // But we stored just the "Cart Name" in the save filename prefix.
+  // We should try to find the cart in our library list.
+
+  const matchingGame = games.value.find((g) => g.name.includes(save.cartName));
+
+  let targetCart = matchingGame ? matchingGame.name : save.cartName + ".p8.png";
+
+  // Attempt to prepare handoff
+  try {
+    const fileData = await Filesystem.readFile({
+      path: `Carts/${targetCart}`,
+      directory: Directory.Documents,
+    });
+    // stash
+    localStorage.setItem("pico_handoff_payload", fileData.data);
+    localStorage.setItem("pico_handoff_name", targetCart);
+  } catch (e) {
+    console.warn(
+      "Could not find/stash cart for deep link, hoping Player finds it or fails gracefully"
+    );
+  }
+
+  // Navigate with query params
+  // Player.vue will see query.state and auto-load
+  // Navigate with query params
+  // Player.vue will see query.state and auto-load
+  router.push({
+    path: "/play",
+    query: {
+      cart: targetCart,
+      state: save.name,
+      t: Date.now(),
+    },
+  });
+}
+
+async function shareState(save) {
+  Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+  try {
+    await Share.share({
+      title: "PICO-8 Save State",
+      text: `Share ${save.simpleName}`,
+      files: [save.uri],
+    });
+  } catch (e) {
+    console.error("Share failed", e);
+    // ignore dismissals
+  }
+}
+
+async function deleteState(save) {
+  // # no haptics before confirm to avoid ios ui glitch
+  if (!confirm(`Delete ${save.simpleName}?`)) return;
+
+  try {
+    await Filesystem.deleteFile({
+      path: `Saves/${save.name}`,
+      directory: Directory.Documents,
+    });
+
+    // remove from list locally
+    saves.value = saves.value.filter((s) => s.name !== save.name);
+    Haptics.notification({ type: "success" }).catch(() => {});
+  } catch (e) {
+    console.error("Delete failed", e);
+    alert("Could not delete file.");
   }
 }
 
@@ -445,8 +690,11 @@ function formatName(filename) {
     .replace(/-/g, " ");
 }
 
+const formatDate = (ms) => new Date(ms).toLocaleDateString();
+
 async function openGame(game) {
   if (deleteMode.value) return;
+  Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
 
   // # memory stream handoff
   // read file -> stash -> navigate -> picobridge reads stash
@@ -500,6 +748,22 @@ async function openGame(game) {
 .staggered-fade-leave-to {
   opacity: 0;
   transform: translateY(20px);
+}
+
+/* List Transitions */
+.list-move,
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.4s ease;
+}
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(-30px);
+}
+.list-leave-active {
+  position: absolute;
+  width: 100%;
 }
 
 /* custom scrollbar */

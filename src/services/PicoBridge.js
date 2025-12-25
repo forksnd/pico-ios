@@ -13,12 +13,12 @@ import { haptics } from "../utils/haptics";
 window.picoBridge = {
   syncFromNative: async () => {
     console.log(
-      "⏳ [PicoBridge] bridge warming up... (syncFromNative called early)"
+      "[PicoBridge] bridge warming up... (syncFromNative called early)"
     );
   },
   syncToNative: async () => {
     console.warn(
-      "⏳ [PicoBridge] bridge warming up... (syncToNative called early)"
+      "[PicoBridge] bridge warming up... (syncToNative called early)"
     );
   },
 };
@@ -55,7 +55,7 @@ class Pico8Bridge {
 
     this.isActive = true;
     this.currentCartName = cartName;
-    console.log(`✅[HEARTBEAT] booting: ${cartName}`);
+    console.log(`[PicoBridge] booting: ${cartName}`);
 
     // # silence internal engine
     localStorage.setItem("pico8_debug", "0");
@@ -100,10 +100,10 @@ class Pico8Bridge {
                 fs.mkdir("/appdata");
               } catch (e) {}
               fs.mount(Module.IDBFS, {}, "/appdata");
-              console.log("📂 [PicoBridge] /appdata mounted (preRun)");
+              console.log("[PicoBridge] /appdata mounted (preRun)");
               if (window._cartdat) {
                 try {
-                  console.log("🔒 [PicoBridge] pre-creating /cart.png");
+                  console.log("[PicoBridge] pre-creating /cart.png");
                   Module.FS.createDataFile(
                     "/",
                     "cart.png",
@@ -122,19 +122,19 @@ class Pico8Bridge {
           }
 
           // ## pulse-start & anti-stall
-          console.log("⚡️ [PicoBridge] pulse-starting engine...");
+          console.log("[PicoBridge] pulse-starting engine...");
           window.pico8_buttons = [0];
           window.pico8_gpio = new Array(128);
 
           // # force fs release logic
           if (!Module.FS && typeof FS !== "undefined") {
             Module.FS = FS;
-            console.log("⚡️ [PicoBridge] Module.FS = FS (global) forced.");
+            console.log("[PicoBridge] Module.FS = FS (global) forced.");
           }
           // # fallback to window.fs
           if (!Module.FS && window.FS) {
             Module.FS = window.FS;
-            console.log("⚡️ [PicoBridge] Module.FS = window.FS forced.");
+            console.log("[PicoBridge] Module.FS = window.FS forced.");
           }
 
           console.log("[Pico8Bridge] preRun: starting vfs poller...");
@@ -155,9 +155,7 @@ class Pico8Bridge {
               if (!window.pico8_engine_ready) {
                 window.FS = fs;
                 window.pico8_engine_ready = true;
-                console.log(
-                  "💎 [PicoBoot] engine ready (module.fs checks out)"
-                );
+                console.log("[PicoBoot] engine ready (module.fs checks out)");
               }
             }
 
@@ -174,9 +172,7 @@ class Pico8Bridge {
 
             // # timeout failsafe
             if (pollCount > MAX_POLLS) {
-              console.error(
-                "❌ [PicoBoot] TIMEOUT: engine failed to initialize."
-              );
+              console.error("[Error] TIMEOUT: engine failed to initialize.");
               clearInterval(poller);
               haptics.error();
               return;
@@ -185,7 +181,7 @@ class Pico8Bridge {
             if (fs) {
               // # check sync status
               if (fs) {
-                console.log("✅ [PicoBoot] fs checking in...");
+                console.log("[PicoBoot] fs checking in...");
                 // ## pull from native saves
                 if (
                   window.picoBridge &&
@@ -194,7 +190,7 @@ class Pico8Bridge {
                   window.picoBridge.syncFromNative().then(() => {
                     fs.syncfs(true, (err) => {
                       if (!err)
-                        console.log("✅ [PicoBoot] initial sync configured");
+                        console.log("[PicoBoot] initial sync configured");
                     });
                   });
                 } else {
@@ -206,12 +202,12 @@ class Pico8Bridge {
                     picoBridge.syncFromNative().then(() => {
                       fs.syncfs(true, (err) => {
                         if (!err)
-                          console.log("✅ [PicoBoot] initial sync (fallback)");
+                          console.log("[PicoBoot] initial sync (fallback)");
                       });
                     });
                   } else {
                     console.warn(
-                      "⚠️ [PicoBoot] skipping syncFromNative (bridge not ready)"
+                      "[Warning] skipping syncFromNative (bridge not ready)"
                     );
                   }
                 }
@@ -224,11 +220,11 @@ class Pico8Bridge {
                   if (fs) {
                     fs.syncfs(false, async (err) => {
                       if (err) {
-                        console.error("❌ save failed:", err);
+                        console.error("[Error] save failed:", err);
                         resolve(false);
                       } else {
                         console.log(
-                          "✅ idbfs save complete. syncing to native in 500ms..."
+                          "[OK] idbfs save complete. syncing to native in 500ms..."
                         );
                         // # sync gatekeeping
                         setTimeout(async () => {
@@ -277,7 +273,7 @@ class Pico8Bridge {
                     haptics.success();
                   }
                 } catch (e) {
-                  console.error("❌ [Pico8Bridge] vfs/boot error:", e);
+                  console.error("[Error] vfs/boot error:", e);
                 }
               }
             }
@@ -291,7 +287,7 @@ class Pico8Bridge {
         // # force fs exposure
         if (window.Module && window.Module.FS) {
           window.FS = window.Module.FS;
-          console.log("🌍 window.FS exposed");
+          console.log("[PicoBridge] window.FS exposed");
         }
 
         // # expose ram pointer if available
@@ -365,7 +361,7 @@ class Pico8Bridge {
 
   // ## native sync methods
   async syncFromNative() {
-    console.log("🔄 [PicoBridge] syncFromNative (class method)");
+    console.log("[PicoBridge] syncFromNative (class method)");
     return Promise.resolve();
   }
 
@@ -376,7 +372,7 @@ class Pico8Bridge {
 
       // # critical filesystem check
       if (!fs || !fs.analyzePath || !window.pico8_engine_ready) {
-        console.warn("⚠️ [PicoBridge] syncToNative skipped (fs not ready)");
+        console.warn("[Warning] syncToNative skipped (fs not ready)");
         return;
       }
 
@@ -387,9 +383,7 @@ class Pico8Bridge {
       }
 
       const files = fs.readdir(savesDir);
-      console.log(
-        `💾 [pico8bridge] scanning /appdata... found ${files.length} items`
-      );
+      console.log(`[Native] scanning /appdata... found ${files.length} items`);
 
       for (const file of files) {
         if (file === "." || file === "..") continue;
@@ -458,7 +452,7 @@ class Pico8Bridge {
             const base = i - 0x5f00;
             if (base >= 0) {
               console.log(
-                `🧠 [Memory Hunter] found ram base at 0x${base.toString(16)}`
+                `[Memory Hunter] found ram base at 0x${base.toString(16)}`
               );
               return base;
             }
@@ -494,7 +488,7 @@ class Pico8Bridge {
         throw new Error("Emscripten not ready");
 
       // ## full heap snapshot + gzip compression
-      console.log("🧠 [PicoBridge] capturing full execution heap...");
+      console.log("[Memory Hunter] capturing full execution heap...");
 
       // 1. create copy of heap
       const heapData = new Uint8Array(window.Module.HEAPU8);
@@ -539,11 +533,11 @@ class Pico8Bridge {
         recursive: true,
       });
 
-      console.log(`💾 [Native] full state save success`);
+      console.log(`[Native] full state save success`);
       haptics.success();
       return true;
     } catch (e) {
-      console.error("❌ full state capture failed:", e);
+      console.error("[Error] full state capture failed:", e);
       haptics.error();
       return false;
     }
@@ -564,7 +558,7 @@ class Pico8Bridge {
       });
 
       // ## robust decompression (manual stream)
-      console.log("⚡️ [PicoBridge] decompressing (manual mode)...");
+      console.log("[PicoBridge] decompressing (manual mode)...");
 
       // 1. manual base64 decode
       const binaryString = window.atob(result.data);
@@ -604,16 +598,13 @@ class Pico8Bridge {
         }
 
         loadedHeap = rawData;
-        console.log("🧊 [PicoBridge] decompression success");
+        console.log("[PicoBridge] decompression success");
       } catch (e) {
-        console.warn(
-          "⚠️ [PicoBridge] decompression failed, falling back to raw.",
-          e
-        );
+        console.warn("[Warning] decompression failed, falling back to raw.", e);
         loadedHeap = bytes;
       }
 
-      console.log(`🧠 [PicoBridge] heap size: ${loadedHeap.length} bytes`);
+      console.log(`[Memory Hunter] heap size: ${loadedHeap.length} bytes`);
 
       if (loadedHeap.length !== window.Module.HEAPU8.length) {
         console.warn(
@@ -640,11 +631,11 @@ class Pico8Bridge {
 
       this.resume();
 
-      console.log("⚡️ [PicoBridge] state injection complete");
+      console.log("[PicoBridge] state injection complete");
       haptics.success();
       return true;
     } catch (e) {
-      console.error("❌ state load failed:", e);
+      console.error("[Error] state load failed:", e);
       haptics.error();
       return false;
     }
@@ -657,7 +648,7 @@ class Pico8Bridge {
         throw new Error("Emscripten not ready");
 
       const ramBase = this._findRAMPointer();
-      console.log(`🧠 [PicoBridge] injecting ram at 0x${ramBase.toString(16)}`);
+      console.log(`[Memory Hunter] injecting ram at 0x${ramBase.toString(16)}`);
 
       if (ramData.length !== 0x8000) {
         console.warn(
@@ -667,10 +658,10 @@ class Pico8Bridge {
       this.pause();
       window.Module.HEAPU8.set(ramData, ramBase);
       this.resume();
-      console.log("⚡️ [PicoBridge] ram injection complete");
+      console.log("[PicoBridge] ram injection complete");
       haptics.success();
     } catch (e) {
-      console.error("❌ ram injection failed:", e);
+      console.error("[Error] ram injection failed:", e);
       haptics.error();
     }
   }
