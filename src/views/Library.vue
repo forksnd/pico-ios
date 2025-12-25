@@ -407,9 +407,9 @@
                   </div>
                 </div>
 
-                <!-- Actions -->
+                <!-- actions -->
                 <div class="flex items-center gap-2">
-                  <!-- Load -->
+                  <!-- load -->
                   <button
                     @click="loadState(save)"
                     class="p-2 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 active:scale-95 transition-all"
@@ -436,7 +436,7 @@
                     </svg>
                   </button>
 
-                  <!-- Share -->
+                  <!-- share -->
                   <button
                     @click="shareState(save)"
                     class="p-2 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 active:scale-95 transition-all"
@@ -457,7 +457,7 @@
                     </svg>
                   </button>
 
-                  <!-- Delete -->
+                  <!-- delete -->
                   <button
                     @click.stop="deleteState(save)"
                     class="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 active:scale-95 transition-all"
@@ -611,17 +611,11 @@ async function loadState(save) {
   console.log("[Library] Booting from state:", save.name);
 
   // # find cart matching save
-  // we need the full .p8.png filename for the cart.
-  // heuristic: try exact match, then append .p8.png, then .p8
-  // actually, Player.vue expects the FILENAME of the cart in Document/Carts.
-  // But we stored just the "Cart Name" in the save filename prefix.
-  // We should try to find the cart in our library list.
-
   const matchingGame = games.value.find((g) => g.name.includes(save.cartName));
 
   let targetCart = matchingGame ? matchingGame.name : save.cartName + ".p8.png";
 
-  // Attempt to prepare handoff
+  // attempt to prepare handoff
   try {
     const fileData = await Filesystem.readFile({
       path: `Carts/${targetCart}`,
@@ -636,10 +630,7 @@ async function loadState(save) {
     );
   }
 
-  // Navigate with query params
-  // Player.vue will see query.state and auto-load
-  // Navigate with query params
-  // Player.vue will see query.state and auto-load
+  // navigate with query params
   router.push({
     path: "/play",
     query: {
@@ -665,7 +656,7 @@ async function shareState(save) {
 }
 
 async function deleteState(save) {
-  // # no haptics before confirm to avoid ios ui glitch
+  // no haptics before confirm to avoid ios ui glitch
   if (!confirm(`Delete ${save.simpleName}?`)) return;
 
   try {
@@ -750,7 +741,7 @@ async function openGame(game) {
   transform: translateY(20px);
 }
 
-/* List Transitions */
+/* list transitions */
 .list-move,
 .list-enter-active,
 .list-leave-active {

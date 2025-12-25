@@ -42,7 +42,9 @@
           class="absolute inset-0 bg-black/60 backdrop-blur-xl z-30 flex items-center justify-center"
         >
           <!-- menu content -->
-          <div class="flex flex-col gap-4 text-center p-8 w-full max-w-xs">
+          <div
+            class="flex flex-col gap-4 text-center p-8 landscape:p-4 landscape:gap-2 w-full max-w-xs max-h-screen overflow-y-auto"
+          >
             <h2
               class="text-4xl font-bold text-white mb-8 tracking-widest drop-shadow-md font-pico"
             >
@@ -98,10 +100,9 @@
     <Transition name="fade">
       <div
         v-if="showInfo"
-        class="fixed top-12 left-1/2 -translate-x-1/2 px-6 py-3 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl z-[60] flex items-center gap-3 pointer-events-none"
+        class="fixed top-8 left-1/2 -translate-x-1/2 px-4 py-2 bg-[#111]/90 backdrop-blur-md border border-white/10 rounded-full shadow-xl z-[60] flex items-center gap-3 pointer-events-none"
       >
-        <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-        <span class="text-white/90 font-medium tracking-wide text-sm">
+        <span class="text-white/90 font-medium text-xs tracking-wide font-mono">
           {{ infoMessage }}
         </span>
       </div>
@@ -228,6 +229,18 @@ onMounted(async () => {
 
       setTimeout(() => {
         loading.value = false;
+
+        // # deep link auto-load
+        if (route.query.state) {
+          console.log(
+            "⚡️ [Player] Deep Link: Auto-loading state:",
+            route.query.state
+          );
+          setTimeout(async () => {
+            await picoBridge.loadRAMState("Saves/" + route.query.state);
+            showToast("AUTO-LOADED");
+          }, 500); // grace period
+        }
       }, 1500);
     } else {
       throw new Error("No data found for cart");
@@ -271,6 +284,7 @@ const toggleMenu = () => {
 };
 
 const triggerMenuAction = (action) => {
+  Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
   if (action === "resume") toggleMenu();
   if (action === "quicksave") triggerQuickSave();
   if (action === "quickload") triggerQuickLoad();
@@ -281,29 +295,32 @@ const triggerMenuAction = (action) => {
 
 const triggerQuickSave = async () => {
   if (!window.FS) {
-    showToast("WAITING FOR FS...");
+    showToast("Waiting for filesystem...");
     return;
   }
-  showToast("SAVING (KEEP OPEN)...");
+  showToast("Saving State...");
+  const start = performance.now();
   const success = await window.picoBridge.captureFullRAMState();
+  const duration = Math.round(performance.now() - start);
+
   if (success) {
-    showToast("STATE SAVED 💾");
+    showToast(`State Saved (${duration}ms)`);
   } else {
-    showToast("SAVE FAILED ❌");
+    showToast("Save Failed");
   }
 };
 
 const triggerQuickLoad = async () => {
-  showToast("LOADING STATE...");
-
-  // # delegate to bridge
+  showToast("Loading State...");
+  const start = performance.now();
   const success = await window.picoBridge.loadRAMState();
+  const duration = Math.round(performance.now() - start);
 
   if (success) {
-    showToast("STATE LOADED ⚡️");
+    showToast(`State Loaded (${duration}ms)`);
     isMenuOpen.value = false;
   } else {
-    showToast("NO SAVE FOUND");
+    showToast("No Save Found");
   }
 };
 
@@ -313,7 +330,7 @@ const triggerSave = (silent = false) => {
     window.picoSave();
   }
   window.picoBridge.syncToNative();
-  if (!silent) showToast("GAME SAVED");
+  if (!silent) showToast("Game Saved");
 };
 
 const triggerBrowse = () => {
@@ -331,7 +348,7 @@ const handleFileImport = async (event) => {
   if (!file) return;
 
   // feedback
-  showToast("IMPORTING...");
+  showToast("Importing...");
 
   const reader = new FileReader();
   reader.onload = async (e) => {
@@ -343,7 +360,7 @@ const handleFileImport = async (event) => {
       // # ram injection path
       console.log("⚡️ [Player] Detect .state file, triggering RAM Injection");
       window.picoBridge.injectFullRAMState(uint8Array);
-      showToast("STATE LOADED ⚡️");
+      showToast("State Loaded");
       // close menu to return to game
       isMenuOpen.value = false;
       picoBridge.resume();
@@ -361,31 +378,29 @@ function resetGame() {
 }
 
 async function exitGame() {
-  // # reliable exit save
-  // await engine's internal flush
+  // 1. Save data (Async wait)
   if (window.picoSave) {
-    console.log("💾 [Player] Saving High Scores & Save Data (Async)...");
+    console.log("💾 [Player] Auto-saving before exit...");
     const savePromise = window.picoSave();
-    const timeout = new Promise((resolve) => setTimeout(resolve, 2000));
+    const timeout = new Promise((resolve) => setTimeout(resolve, 1000));
     await Promise.race([savePromise, timeout]);
   }
-
-  // force one last sync
   await picoBridge.syncToNative();
 
+  // 2. Kill Switch
   window.Pico8Kill = true;
   isExiting.value = true;
   picoBridge.shutdown();
 
+  // 3. HARD Navigation to Root (Clears WASM Memory)
   setTimeout(() => {
-    const url = new URL(window.location.href);
-    url.search = "";
-    url.hash = "#/";
-    window.location.href = url.toString();
+    // force a reload by stripping all query params and hash
+    const baseUrl = window.location.origin + window.location.pathname;
+    window.location.replace(baseUrl);
   }, 100);
 }
 
-// # enhanced shutdown hook
+// enhanced shutdown hook
 function hookPicoQuit() {
   if (window.Module) {
     const originalQuit = window.Module.quit;
