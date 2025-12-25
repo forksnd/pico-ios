@@ -2,7 +2,7 @@
 
 A native PICO-8 emulator for iOS that bridges the gap between web flexibility and native filesystem access!
 
-[Download the latest build.](https://github.com/jevonlipsey/pico-ios/releases/tag/v1.0)
+[Download the latest build.](https://github.com/jevonlipsey/pico-ios/releases/latest)
 
 ![Demo](assets/demo.gif)
 
