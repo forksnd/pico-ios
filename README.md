@@ -31,6 +31,16 @@ It’s _not_ a browser wrapper; it’s a custom runtime environment built for na
 
 ## Installation
 
+- sideloading via AltStore, SideStore, or Sideloadly
+
+1. Download the `Pocket8.ipa` from [Releases](link).
+2. Sideload via **AltStore**, **SideStore**, or **Sideloadly**.
+3. Enable **Developer Mode** in iOS Settings to authorize, and trust yourself in Settings > General > Device Management > Your Name.
+
+## Project Status
+
+This is a standalone engineering feat designed to push the limits of WebAssembly-to-Native bridging. While an App Store release is a future possibility, the current priority is maintaining an uncompromised, open-source experience for the PICO-8 community.
+
 - opens xcode, click the play button to build and run
 
 ```bash
