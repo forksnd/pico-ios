@@ -1,28 +1,31 @@
 <template>
   <div
-    class="relative w-full h-full flex justify-between items-center pointer-events-none select-none px-6 pb-6 landscape:grid landscape:grid-cols-[240px_1fr_240px] landscape:p-0 landscape:items-stretch"
+    class="relative w-full h-full flex justify-between items-center px-6 pb-6 landscape:grid landscape:grid-cols-[240px_1fr_240px] landscape:p-0 landscape:items-stretch pointer-events-auto select-none"
     style="
       -webkit-user-select: none;
       user-select: none;
       -webkit-touch-callout: none;
+      touch-action: none;
     "
+    @touchstart.prevent="handleTouch"
+    @touchmove.prevent="handleTouch"
+    @touchend.prevent="handleTouchEnd"
+    @touchcancel.prevent="handleTouchEnd"
+    @mousedown.prevent="handleTouch"
+    @mousemove.prevent="handleTouch"
+    @mouseup.prevent="handleTouchEnd"
+    @mouseleave.prevent="handleTouchEnd"
   >
     <!-- d-pad container left -->
     <!-- # landscape: center left -->
     <div
-      class="relative w-40 h-40 small:w-36 small:h-36 ml-2 pointer-events-auto active:scale-95 transition-transform duration-100 ease-out landscape:ml-0 landscape:self-center landscape:justify-self-center touch-action-none landscape:col-start-1"
+      ref="dpadRef"
+      class="relative w-40 h-40 small:w-36 small:h-36 ml-2 active:scale-95 transition-transform duration-100 ease-out landscape:ml-0 landscape:self-center landscape:justify-self-center touch-action-none landscape:col-start-1"
       style="
         -webkit-tap-highlight-color: transparent;
         touch-action: none;
         -webkit-user-select: none;
       "
-      @touchstart.prevent="handleDpadInput"
-      @touchmove.prevent="handleDpadInput"
-      @touchend.prevent="handleDpadEnd"
-      @mousedown.prevent="handleDpadInput"
-      @mousemove.prevent="handleDpadInput"
-      @mouseup.prevent="handleDpadEnd"
-      @mouseleave.prevent="handleDpadEnd"
     >
       <!-- glow effect -->
       <div
@@ -30,7 +33,10 @@
       ></div>
 
       <!-- d-pad svg -->
-      <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-2xl">
+      <svg
+        viewBox="0 0 100 100"
+        class="w-full h-full drop-shadow-2xl pointer-events-none"
+      >
         <defs>
           <linearGradient
             id="glass-gradient"
@@ -85,7 +91,7 @@
     <button
       class="hidden landscape:flex absolute top-6 left-8 w-12 h-12 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.1)] active:bg-white/20 active:scale-95 transition-all duration-300 items-center justify-center z-50 pointer-events-auto"
       @click="openMenu"
-      @touchstart.prevent="openMenu"
+      @touchstart.stop.prevent="openMenu"
     >
       <!-- home icon -->
       <svg
@@ -94,7 +100,7 @@
         viewBox="0 0 24 24"
         stroke-width="2"
         stroke="currentColor"
-        class="w-5 h-5 text-white/80"
+        class="w-5 h-5 text-white/80 pointer-events-none"
       >
         <path
           stroke-linecap="round"
@@ -108,7 +114,7 @@
     <button
       class="landscape:hidden absolute top-2 left-1/2 transform -translate-x-1/2 w-12 h-12 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.1)] active:bg-white/20 active:scale-95 transition-all duration-300 flex items-center justify-center z-40 pointer-events-auto"
       @click="openMenu"
-      @touchstart.prevent="openMenu"
+      @touchstart.stop.prevent="openMenu"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -116,7 +122,7 @@
         viewBox="0 0 24 24"
         stroke-width="2"
         stroke="currentColor"
-        class="w-5 h-5 text-white/80"
+        class="w-5 h-5 text-white/80 pointer-events-none"
       >
         <path
           stroke-linecap="round"
@@ -134,13 +140,13 @@
       <button
         class="group flex flex-col items-center gap-2 active:scale-95 transition-transform duration-300 min-w-[44px] min-h-[44px] justify-center pointer-events-auto"
         @click="openMenu"
-        @touchstart.prevent="openMenu"
+        @touchstart.stop.prevent="openMenu"
       >
         <div
-          class="w-12 h-4 rounded-full bg-white/20 backdrop-blur-md border border-white/10 shadow-sm active:bg-white/40 transition-colors -rotate-[25deg]"
+          class="w-12 h-4 rounded-full bg-white/20 backdrop-blur-md border border-white/10 shadow-sm active:bg-white/40 transition-colors -rotate-[25deg] pointer-events-none"
         ></div>
         <span
-          class="text-[10px] font-bold text-white/50 tracking-widest uppercase font-sans"
+          class="text-[10px] font-bold text-white/50 tracking-widest uppercase font-sans pointer-events-none"
           >select</span
         >
       </button>
@@ -148,16 +154,16 @@
       <!-- portrait start -->
       <button
         class="group flex flex-col items-center gap-2 active:scale-95 transition-transform duration-300 min-w-[44px] min-h-[44px] justify-center"
-        @touchstart.prevent="pressKey(13)"
-        @touchend.prevent="releaseKey(13)"
-        @mousedown.prevent="pressKey(13)"
-        @mouseup.prevent="releaseKey(13)"
+        @touchstart.stop.prevent="pressKey(13)"
+        @touchend.stop.prevent="releaseKey(13)"
+        @mousedown.stop.prevent="pressKey(13)"
+        @mouseup.stop.prevent="releaseKey(13)"
       >
         <div
-          class="w-12 h-4 rounded-full bg-white/20 backdrop-blur-md border border-white/10 shadow-sm active:bg-white/40 transition-colors -rotate-[25deg]"
+          class="w-12 h-4 rounded-full bg-white/20 backdrop-blur-md border border-white/10 shadow-sm active:bg-white/40 transition-colors -rotate-[25deg] pointer-events-none"
         ></div>
         <span
-          class="text-[10px] font-bold text-white/50 tracking-widest uppercase font-sans"
+          class="text-[10px] font-bold text-white/50 tracking-widest uppercase font-sans pointer-events-none"
           >start</span
         >
       </button>
@@ -175,10 +181,10 @@
         <button
           class="absolute bottom-24 right-2 landscape:bottom-auto landscape:top-0 landscape:right-0 w-20 h-20 small:w-16 small:h-16 rounded-full bg-[rgba(255,0,77,0.15)] shadow-[0_0_15px_rgba(255,255,255,0.3)] backdrop-blur-md active:translate-y-1 active:shadow-none transition-all duration-75 flex items-center justify-center group border border-[#FF004D]/80 pointer-events-auto"
           style="-webkit-tap-highlight-color: transparent"
-          @touchstart.prevent="pressKey(90)"
-          @touchend.prevent="releaseKey(90)"
-          @mousedown.prevent="pressKey(90)"
-          @mouseup.prevent="releaseKey(90)"
+          @touchstart.stop.prevent="pressKey(90)"
+          @touchend.stop.prevent="releaseKey(90)"
+          @mousedown.stop.prevent="pressKey(90)"
+          @mouseup.stop.prevent="releaseKey(90)"
         >
           <span
             class="text-white font-bold text-3xl font-pico opacity-90 group-active:opacity-100 flex items-center justify-center translate-x-[2px] -translate-y-[3px] pointer-events-none"
@@ -190,10 +196,10 @@
         <button
           class="absolute bottom-4 right-14 landscape:bottom-0 landscape:left-0 w-20 h-20 small:w-16 small:h-16 rounded-full bg-[rgba(41,173,255,0.15)] shadow-[0_0_15px_rgba(255,255,255,0.3)] backdrop-blur-md active:translate-y-1 active:shadow-none transition-all duration-75 flex items-center justify-center group border border-[#29ADFF]/80 pointer-events-auto"
           style="-webkit-tap-highlight-color: transparent"
-          @touchstart.prevent="pressKey(88)"
-          @touchend.prevent="releaseKey(88)"
-          @mousedown.prevent="pressKey(88)"
-          @mouseup.prevent="releaseKey(88)"
+          @touchstart.stop.prevent="pressKey(88)"
+          @touchend.stop.prevent="releaseKey(88)"
+          @mousedown.stop.prevent="pressKey(88)"
+          @mouseup.stop.prevent="releaseKey(88)"
         >
           <span
             class="text-white font-bold text-3xl font-pico opacity-90 group-active:opacity-100 flex items-center justify-center translate-x-[2px] -translate-y-[3px] pointer-events-none"
@@ -210,13 +216,13 @@
     <button
       class="hidden landscape:flex absolute bottom-4 left-6 w-16 h-16 pointer-events-auto items-center justify-center flex-col gap-1 active:scale-95 transition-transform duration-300 z-50 pointer-events-auto"
       @click="openMenu"
-      @touchstart.prevent="openMenu"
+      @touchstart.stop.prevent="openMenu"
     >
       <div
-        class="w-12 h-4 rounded-full bg-white/20 backdrop-blur-md border border-white/10 shadow-sm active:bg-white/40 transition-colors -rotate-[25deg]"
+        class="w-12 h-4 rounded-full bg-white/20 backdrop-blur-md border border-white/10 shadow-sm active:bg-white/40 transition-colors -rotate-[25deg] pointer-events-none"
       ></div>
       <span
-        class="text-[10px] font-bold text-white/50 tracking-widest uppercase font-sans mt-1"
+        class="text-[10px] font-bold text-white/50 tracking-widest uppercase font-sans mt-1 pointer-events-none"
         >select</span
       >
     </button>
@@ -224,16 +230,16 @@
     <!-- landscape start -->
     <button
       class="hidden landscape:flex absolute bottom-4 right-6 w-16 h-16 pointer-events-auto items-center justify-center flex-col gap-1 active:scale-95 transition-transform duration-300 z-50 pointer-events-auto"
-      @touchstart.prevent="pressKey(13)"
-      @touchend.prevent="releaseKey(13)"
-      @mousedown.prevent="pressKey(13)"
-      @mouseup.prevent="releaseKey(13)"
+      @touchstart.stop.prevent="pressKey(13)"
+      @touchend.stop.prevent="releaseKey(13)"
+      @mousedown.stop.prevent="pressKey(13)"
+      @mouseup.stop.prevent="releaseKey(13)"
     >
       <div
-        class="w-12 h-4 rounded-full bg-white/20 backdrop-blur-md border border-white/10 shadow-sm active:bg-white/40 transition-colors -rotate-[25deg]"
+        class="w-12 h-4 rounded-full bg-white/20 backdrop-blur-md border border-white/10 shadow-sm active:bg-white/40 transition-colors -rotate-[25deg] pointer-events-none"
       ></div>
       <span
-        class="text-[10px] font-bold text-white/50 tracking-widest uppercase font-sans mt-1"
+        class="text-[10px] font-bold text-white/50 tracking-widest uppercase font-sans mt-1 pointer-events-none"
         >start</span
       >
     </button>
@@ -249,6 +255,7 @@ import { ref, reactive } from "vue";
 const activeKeys = reactive(new Set());
 
 // # optimization: touch tracking & layout caching
+const dpadRef = ref(null);
 let dpadTouchId = null;
 const dpadCenter = { x: 0, y: 0 };
 let isMouseDown = false;
@@ -256,52 +263,111 @@ let audioResumed = false;
 
 const emit = defineEmits(["menu"]);
 
-const cacheDpadMetrics = (e) => {
-  const el = e.currentTarget;
-  const rect = el.getBoundingClientRect();
+const cacheDpadMetrics = () => {
+  if (!dpadRef.value) return;
+  const rect = dpadRef.value.getBoundingClientRect();
   dpadCenter.x = rect.left + rect.width / 2;
   dpadCenter.y = rect.top + rect.height / 2;
+  // store radius/rect for hit detection if needed, but rect is enough for now
+  dpadCenter.rect = rect;
 };
 
-const handleDpadInput = (e) => {
-  if (!dpadCenter.x) cacheDpadMetrics(e);
+const handleTouch = (e) => {
+  // refresh metrics if needed (or throttle this)
+  if (!dpadCenter.x) cacheDpadMetrics();
 
-  let clientX, clientY;
-  // # strict id matching
-  if (e.type === "touchmove" || e.type === "touchstart") {
-    const touch = Array.from(e.changedTouches).find(
-      (t) => t.identifier === dpadTouchId
-    );
-    if (!touch && e.type === "touchstart") {
-      // # capture new id
-      const t = e.changedTouches[0];
-      dpadTouchId = t.identifier;
-      clientX = t.clientX;
-      clientY = t.clientY;
-      // recache on new touch start in case layout shifted
-      cacheDpadMetrics(e);
-    } else if (touch) {
-      clientX = touch.clientX;
-      clientY = touch.clientY;
-    } else {
-      return; // ignore rogue touches
-    }
-  } else {
-    // # mouse fallback
-    if (e.type === "mousedown") {
-      isMouseDown = true;
-      cacheDpadMetrics(e);
-    }
-    if (e.type === "mousemove" && !isMouseDown) return;
-    clientX = e.clientX;
-    clientY = e.clientY;
+  // 1. mouse fallback
+  if (e.type.startsWith("mouse")) {
+    handleMouseInput(e);
+    return;
   }
 
+  // 2. touch handling
+  const touches = Array.from(e.changedTouches || []);
+
+  // start: if we aren't tracking a finger yet, check if any new touch is inside the D-Pad
+  if (dpadTouchId === null) {
+    for (const t of touches) {
+      if (isInsideDpad(t.clientX, t.clientY)) {
+        dpadTouchId = t.identifier;
+        cacheDpadMetrics();
+        processDpadCoordinates(t.clientX, t.clientY);
+        break; // claim this finger
+      }
+    }
+  }
+
+  // move: if we ARE tracking a finger, check if it moved
+  if (dpadTouchId !== null) {
+    const activeTouch = touches.find((t) => t.identifier === dpadTouchId);
+    if (activeTouch) {
+      processDpadCoordinates(activeTouch.clientX, activeTouch.clientY);
+    }
+  }
+};
+
+const handleTouchEnd = (e) => {
+  if (e.changedTouches) {
+    // if tracking a touch, see if it was the one that ended/cancelled
+    if (dpadTouchId !== null) {
+      const endedTouch = Array.from(e.changedTouches).find(
+        (t) => t.identifier === dpadTouchId
+      );
+
+      if (endedTouch) {
+        // our D-Pad finger lifted
+        clearDpadState();
+      }
+    }
+  } else {
+    // mouse up or other generic end
+    clearDpadState();
+  }
+};
+
+const clearDpadState = () => {
+  dpadTouchId = null;
+  isMouseDown = false;
+  // release all active keys
+  for (const k of activeKeys) {
+    sendKey(k, "keyup");
+  }
+  activeKeys.clear();
+};
+
+const handleMouseInput = (e) => {
+  if (e.type === "mousedown") {
+    isMouseDown = true;
+    cacheDpadMetrics();
+  }
+  if (e.type === "mouseup") {
+    clearDpadState();
+    return;
+  }
+  if (!isMouseDown) return;
+  // mouse dev test
+  processDpadCoordinates(e.clientX, e.clientY);
+};
+
+const isInsideDpad = (x, y) => {
+  if (!dpadCenter.rect) cacheDpadMetrics();
+  const r = dpadCenter.rect;
+  // pad the hit area slightly?
+  const PAD = 20;
+  return (
+    x >= r.left - PAD &&
+    x <= r.right + PAD &&
+    y >= r.top - PAD &&
+    y <= r.bottom + PAD
+  );
+};
+
+const processDpadCoordinates = (clientX, clientY) => {
   const dx = clientX - dpadCenter.x;
   const dy = clientY - dpadCenter.y;
 
   // ## hysteresis patch
-  const ENGAGE = 20;
+  const ENGAGE = 10; // Tightened from 20 for Celeste
   const RELEASE = 8;
   const newKeys = [];
 
@@ -309,7 +375,6 @@ const handleDpadInput = (e) => {
   const checkAxis = (value, positiveKey, negativeKey) => {
     // check positive direction
     if (activeKeys.has(positiveKey)) {
-      // keep active if > release
       if (value > RELEASE) newKeys.push(positiveKey);
     } else {
       if (value > ENGAGE) newKeys.push(positiveKey);
@@ -317,10 +382,8 @@ const handleDpadInput = (e) => {
 
     // check negative direction
     if (activeKeys.has(negativeKey)) {
-      // keep active if < -release
       if (value < -RELEASE) newKeys.push(negativeKey);
     } else {
-      // become active if < -engage
       if (value < -ENGAGE) newKeys.push(negativeKey);
     }
   };
@@ -382,25 +445,6 @@ const sendKey = (keyCode, type) => {
   // # legacy bitmask
   if (type === "keydown") updateBitmask(keyCode, true);
   else updateBitmask(keyCode, false);
-};
-
-const handleDpadEnd = (e) => {
-  // if its a specific touch end, ensure it matches our tracked ID
-  if (e && e.changedTouches) {
-    const touch = Array.from(e.changedTouches).find(
-      (t) => t.identifier === dpadTouchId
-    );
-    if (!touch) return; // released a different finger
-  }
-
-  dpadTouchId = null;
-  isMouseDown = false;
-
-  // release all active keys
-  for (const k of activeKeys) {
-    sendKey(k, "keyup");
-  }
-  activeKeys.clear();
 };
 
 const pressKey = async (code) => {
