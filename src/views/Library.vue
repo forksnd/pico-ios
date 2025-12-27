@@ -1,6 +1,7 @@
 <template>
   <div
-    class="min-h-screen bg-[var(--color-oled-black)] relative overflow-y-auto no-scrollbar"
+    class="min-h-screen bg-[var(--color-oled-black)] relative no-scrollbar transition-colors"
+    :class="showSettings ? 'overflow-hidden h-screen' : 'overflow-y-auto'"
   >
     <!-- mesh gradient background -->
     <div class="fixed inset-0 z-0 pointer-events-none">
@@ -24,7 +25,7 @@
 
     <!-- content -->
     <div
-      class="relative z-10 p-6 pt-16 pb-32 max-w-7xl mx-auto w-full"
+      class="relative z-10 p-6 pt-16 pb-32 max-w-7xl mx-auto w-full min-h-[calc(100vh+1px)]"
       @click="handleBackgroundClick"
     >
       <!-- header -->
@@ -346,12 +347,26 @@
 
         <!-- sheet -->
         <div
-          class="relative w-full bg-[var(--color-surface)] backdrop-blur-2xl rounded-t-3xl border-t border-white/10 p-6 pb-12 shadow-2xl max-h-[85vh] overflow-y-auto flex flex-col"
+          class="relative w-full bg-[var(--color-surface)] backdrop-blur-2xl rounded-t-3xl border-t border-white/10 p-6 pb-12 shadow-2xl max-h-[85vh] overflow-y-auto flex flex-col transition-all ease-out"
+          :class="{ 'duration-300': !settingsDrag.active }"
+          :style="{ transform: `translateY(${settingsTransform}px)` }"
         >
-          <!-- handle -->
-          <div class="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-6"></div>
+          <!-- handle & title (draggable area) -->
+          <div
+            @touchstart="handleSettingsTouchStart"
+            @touchmove.prevent="handleSettingsTouchMove"
+            @touchend="handleSettingsTouchEnd"
+            class="touch-none cursor-grab active:cursor-grabbing pb-2"
+          >
+            <!-- handle -->
+            <div
+              class="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-6 pointer-events-none"
+            ></div>
 
-          <h2 class="text-xl font-bold text-white mb-6">Settings</h2>
+            <h2 class="text-xl font-bold text-white mb-4 pointer-events-none">
+              Settings
+            </h2>
+          </div>
 
           <!-- controls -->
           <div class="mb-8">
@@ -417,121 +432,121 @@
               No save files found via filesystem scan.
             </div>
 
-            <transition-group
-              v-else
-              tag="div"
-              name="list"
-              class="space-y-3 relative"
-            >
+            <div v-else class="space-y-6 relative pb-10">
               <div
-                v-for="save in saves"
-                :key="save.name"
-                class="group flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 hover:border-white/10 transition-colors"
+                v-for="group in groupedSaves"
+                :key="group.title"
+                class="animate-fade-in"
               >
-                <div class="flex items-center gap-3 overflow-hidden">
+                <!-- Group Header -->
+                <h4
+                  class="sticky top-0 z-10 bg-[var(--color-surface)]/95 backdrop-blur-md py-2 px-1 text-white/40 text-xs font-bold uppercase tracking-widest mb-2 border-b border-white/5"
+                >
+                  {{ group.title }}
+                </h4>
+
+                <!-- Group Items -->
+                <div class="space-y-2">
                   <div
-                    class="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center shrink-0"
+                    v-for="save in group.files"
+                    :key="save.name"
+                    class="group flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 hover:border-white/10 transition-colors"
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="w-5 h-5 text-indigo-400"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+                    <div class="flex items-center gap-3 overflow-hidden">
+                      <div
+                        class="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center shrink-0 border border-white/5"
+                      >
+                        <span class="text-lg">💾</span>
+                      </div>
+                      <div class="flex flex-col min-w-0">
+                        <span
+                          class="text-white text-sm font-medium truncate font-pico leading-tight uppercase"
+                        >
+                          {{ save.simpleName }}
+                        </span>
+                        <span class="text-xs text-white/40 truncate font-mono">
+                          {{ formatDate(save.mtime) }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- actions -->
+                    <div
+                      class="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity"
                     >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
-                      />
-                    </svg>
+                      <!-- load -->
+                      <button
+                        @click="loadState(save)"
+                        class="p-2 rounded-lg hover:bg-green-500/20 text-green-400 transition-all"
+                        title="Load State"
+                      >
+                        <svg
+                          class="w-5 h-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                          />
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                      </button>
+
+                      <!-- share -->
+                      <button
+                        @click="shareState(save)"
+                        class="p-2 rounded-lg hover:bg-blue-500/20 text-blue-400 transition-all"
+                        title="Share File"
+                      >
+                        <svg
+                          class="w-5 h-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                          />
+                        </svg>
+                      </button>
+
+                      <!-- delete -->
+                      <button
+                        @click.stop="deleteState(save)"
+                        class="p-2 rounded-lg hover:bg-red-500/20 text-red-400 transition-all"
+                        title="Delete File"
+                      >
+                        <svg
+                          class="w-5 h-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
-                  <div class="flex flex-col min-w-0">
-                    <span
-                      class="text-white text-sm font-medium truncate font-pico leading-tight"
-                    >
-                      {{ save.simpleName }}
-                    </span>
-                    <span class="text-xs text-white/40 truncate">
-                      {{ save.cartName }} • {{ formatDate(save.mtime) }}
-                    </span>
-                  </div>
-                </div>
-
-                <!-- actions -->
-                <div class="flex items-center gap-2">
-                  <!-- load -->
-                  <button
-                    @click="loadState(save)"
-                    class="p-2 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 active:scale-95 transition-all"
-                    title="Load State"
-                  >
-                    <svg
-                      class="w-5 h-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                      />
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </button>
-
-                  <!-- share -->
-                  <button
-                    @click="shareState(save)"
-                    class="p-2 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 active:scale-95 transition-all"
-                    title="Share File"
-                  >
-                    <svg
-                      class="w-5 h-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
-                      />
-                    </svg>
-                  </button>
-
-                  <!-- delete -->
-                  <button
-                    @click.stop="deleteState(save)"
-                    class="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 active:scale-95 transition-all"
-                    title="Delete File"
-                  >
-                    <svg
-                      class="w-5 h-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
-                  </button>
                 </div>
               </div>
-            </transition-group>
+            </div>
           </div>
 
           <div class="mt-4">
@@ -549,19 +564,18 @@
 </template>
 
 <script setup>
-import { onMounted, ref, computed } from "vue";
+import { onMounted, ref, computed, reactive } from "vue";
 import { useRouter } from "vue-router";
 import { useLibraryStore } from "../stores/library";
 import { storeToRefs } from "pinia";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
-import { libraryManager } from "../services/LibraryManager"; // # added import
+import { libraryManager } from "../services/LibraryManager";
 
 const router = useRouter();
 const libraryStore = useLibraryStore();
 // # fix: initialize games as safe computed/ref to prevent crash if store is empty
-libraryStore;
 const { loading, searchQuery, sortBy, swapButtons, useJoystick } =
   storeToRefs(libraryStore);
 const games = computed(() => libraryStore.games || []);
@@ -576,6 +590,43 @@ const {
 
 const fileInput = ref(null);
 const showSettings = ref(false);
+
+// # swipeable settings logic
+const settingsDrag = reactive({
+  startY: 0,
+  currentY: 0,
+  active: false,
+});
+
+const settingsTransform = computed(() => {
+  if (!settingsDrag.active) return 0;
+  const delta = settingsDrag.currentY - settingsDrag.startY;
+  return Math.max(0, delta);
+});
+
+const handleSettingsTouchStart = (e) => {
+  settingsDrag.startY = e.touches[0].clientY;
+  settingsDrag.currentY = settingsDrag.startY;
+  settingsDrag.active = true;
+};
+
+const handleSettingsTouchMove = (e) => {
+  if (!settingsDrag.active) return;
+  settingsDrag.currentY = e.touches[0].clientY;
+};
+
+const handleSettingsTouchEnd = () => {
+  if (!settingsDrag.active) return;
+  const delta = settingsDrag.currentY - settingsDrag.startY;
+  if (delta > 100) {
+    showSettings.value = false;
+  }
+  settingsDrag.active = false;
+  settingsDrag.startY = 0;
+  settingsDrag.currentY = 0;
+};
+
+const showDeleteConfirm = ref(false);
 const saves = ref([]);
 const loadingSaves = ref(false);
 const deleteMode = ref(false);
@@ -588,6 +639,24 @@ const sortOptions = [
   { label: "Newest", value: "newest" },
   { label: "Oldest", value: "oldest" },
 ];
+
+const groupedSaves = computed(() => {
+  const groups = {};
+  saves.value.forEach((save) => {
+    // robust extraction: everything before the last _auto or _manual
+    const simpleName = save.cartName;
+    if (!groups[simpleName]) groups[simpleName] = [];
+    groups[simpleName].push(save);
+  });
+
+  // sort groups alphabetically
+  return Object.keys(groups)
+    .sort()
+    .map((key) => ({
+      title: key,
+      files: groups[key].sort((a, b) => b.mtime - a.mtime), // sort files by newest
+    }));
+});
 
 onMounted(async () => {
   console.log("[Library] Mounting...");
@@ -709,9 +778,18 @@ async function openSettings() {
     const parsedFiles = result.files
       .filter((f) => f.name.endsWith(".state"))
       .map((f) => {
-        // extract cart name from filename (e.g. "Celeste_manual.state" -> "Celeste")
-        const nameParts = f.name.split("_");
-        const cartName = nameParts[0] || "Unknown";
+        // look for the last occurrence of _auto or _manual to split
+        const match = f.name.match(/(.+?)(_auto|_manual)/);
+        let cartName = "Unknown";
+
+        if (match) {
+          cartName = match[1];
+        } else {
+          // fallback
+          const parts = f.name.split("_");
+          cartName = parts[0] || "Unknown";
+        }
+
         const simpleName = f.name
           .replace(cartName + "_", "")
           .replace(".state", "")
@@ -722,7 +800,7 @@ async function openSettings() {
           uri: f.uri,
           mtime: f.mtime || Date.now(),
           size: f.size,
-          cartName: cartName, // for booting
+          cartName: cartName, // for grouping
           simpleName: simpleName || "Quick Save",
         };
       });
@@ -933,4 +1011,3 @@ async function openGame(game) {
   animation: wiggle 0.3s linear infinite;
 }
 </style>
-```

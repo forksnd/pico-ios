@@ -116,10 +116,8 @@
         >
           <!-- inner stick -->
           <div
-            class="absolute top-1/2 left-1/2 w-14 h-14 -ml-7 -mt-7 rounded-full bg-white shadow-[0_4px_15px_rgba(0,0,0,0.3)] transition-transform duration-75 will-change-transform"
-            :style="{
-              transform: `translate(${joystickState.x}px, ${joystickState.y}px)`,
-            }"
+            ref="joystickStickRef"
+            class="absolute top-1/2 left-1/2 w-14 h-14 -ml-7 -mt-7 rounded-full bg-white shadow-[0_4px_15px_rgba(0,0,0,0.3)] will-change-transform"
           >
             <!-- stick highlight -->
             <div
@@ -326,8 +324,6 @@ const { swapButtons, useJoystick } = storeToRefs(libraryStore);
 // # joystick state
 const joystickState = reactive({
   active: false,
-  x: 0,
-  y: 0,
 });
 const joystickBaseRef = ref(null);
 
@@ -351,6 +347,7 @@ const dpadRef = ref(null);
 const actionZoneRef = ref(null);
 const btn1Ref = ref(null);
 const btn2Ref = ref(null);
+const joystickStickRef = ref(null);
 
 let dpadTouchId = null;
 let isMouseDown = false;
@@ -521,8 +518,9 @@ const clearDpadState = () => {
   currentDirection = null;
 
   // reset joystick visual
-  joystickState.x = 0;
-  joystickState.y = 0;
+  if (joystickStickRef.value) {
+    joystickStickRef.value.style.transform = `translate3d(0px, 0px, 0)`;
+  }
   joystickState.active = false;
 
   for (const k of DPAD_CODES) {
@@ -612,9 +610,10 @@ const processJoystickCoordinates = (clientX, clientY) => {
     clampY = dy * ratio;
   }
 
-  // update visual state (reactive)
-  joystickState.x = clampX;
-  joystickState.y = clampY;
+  // update visual state (direct DOM for 120hz smoothness)
+  if (joystickStickRef.value) {
+    joystickStickRef.value.style.transform = `translate3d(${clampX}px, ${clampY}px, 0)`;
+  }
   joystickState.active = true;
 
   // logic: angle & deadzone

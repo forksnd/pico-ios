@@ -13,7 +13,7 @@
     <Transition name="slide-down">
       <div
         v-if="toast.isVisible.value"
-        class="fixed top-14 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 px-4 py-3 rounded-full shadow-2xl backdrop-blur-md border border-white/10 transition-all duration-300 !pointer-events-none"
+        class="fixed top-20 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 px-4 py-3 rounded-full shadow-2xl backdrop-blur-md border border-white/10 transition-all duration-300 !pointer-events-none"
         :class="
           toast.type.value === 'error' ? 'bg-red-500/90' : 'bg-neutral-900/90'
         "

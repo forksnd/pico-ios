@@ -98,17 +98,7 @@
       <VirtualController @menu="toggleMenu" />
     </div>
 
-    <!-- info overlay (toast) -->
-    <Transition name="fade">
-      <div
-        v-if="showInfo"
-        class="fixed top-8 left-1/2 -translate-x-1/2 px-4 py-2 bg-[#111]/90 backdrop-blur-md border border-white/10 rounded-full shadow-xl z-[60] flex items-center gap-3 pointer-events-none"
-      >
-        <span class="text-white/90 font-medium text-xs tracking-wide font-mono">
-          {{ infoMessage }}
-        </span>
-      </div>
-    </Transition>
+    <!-- global toast usage (removed local) -->
     <!-- saves drawer -->
     <SavesDrawer
       :isOpen="isSavesDrawerOpen"
@@ -128,7 +118,7 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, ref, watch } from "vue";
+import { onMounted, onUnmounted, ref, watch, computed } from "vue";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { useRouter, useRoute } from "vue-router";
 import { Filesystem, Directory } from "@capacitor/filesystem";
@@ -150,10 +140,10 @@ const isMenuOpen = ref(false);
 const isExiting = ref(false);
 const canvasRef = ref(null);
 const filePicker = ref(null);
-const showInfo = ref(false);
-const infoMessage = ref("");
 const focusIndex = ref(0);
 const isSavesDrawerOpen = ref(false);
+import { useToast } from "../composables/useToast";
+const { showToast } = useToast();
 
 const activeCartName = ref(
   props.cartId === "boot" ? "boot" : props.cartId.replace(".p8.png", "")
@@ -270,21 +260,27 @@ onMounted(async () => {
     alert("Failed to load cartridge: " + e.message);
     router.push("/");
   }
+
+  // # start auto-save timer
+  startAutoSaveTimer();
 });
 
 onUnmounted(() => {
   window.removeEventListener("keydown", handleGlobalKeydown);
+  stopAutoSaveTimer();
   picoBridge.shutdown();
 });
 
 // ## menu structure
-const menuButtons = [
+const isMuted = ref(false);
+
+const menuButtons = computed(() => [
   { label: "resume", action: "resume" },
-  { label: "quick save", action: "quicksave" },
+  { label: "save state", action: "manualsave" },
   { label: "manage saves", action: "managesaves" },
   { label: "reset", action: "reset" },
   { label: "exit", action: "exit" },
-];
+]);
 
 let menuDebounce = false;
 const toggleMenu = async () => {
@@ -298,11 +294,6 @@ const toggleMenu = async () => {
   isMenuOpen.value = !isMenuOpen.value;
   if (isMenuOpen.value) {
     picoBridge.pause();
-    // auto-save state on pause
-    if (window.FS && window.pico8_engine_ready) {
-      const success = await window.picoBridge.captureFullRAMState();
-      if (success) showToast("Game Saved");
-    }
   } else {
     picoBridge.resume();
   }
@@ -312,63 +303,94 @@ const triggerMenuAction = (action) => {
   console.log("⚡️ [Player] Menu Action Triggered:", action);
   Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
   if (action === "resume") toggleMenu();
-  if (action === "quicksave") triggerQuickSave();
-  if (action === "quickload") triggerQuickLoad();
+  if (action === "manualsave") triggerManualSave();
   if (action === "managesaves") isSavesDrawerOpen.value = true;
   if (action === "reset") resetGame();
   if (action === "exit") exitGame();
 };
 
-const triggerQuickSave = async () => {
+// # auto-save logic
+let autoSaveInterval = null;
+
+const startAutoSaveTimer = () => {
+  // 10 minutes = 600,000 ms
+  autoSaveInterval = setInterval(() => {
+    if (!isMenuOpen.value) {
+      triggerAutoSave();
+    }
+  }, 600000);
+  console.log("[Player] Auto-save timer started (10m)");
+};
+
+const stopAutoSaveTimer = () => {
+  if (autoSaveInterval) {
+    clearInterval(autoSaveInterval);
+    autoSaveInterval = null;
+  }
+};
+
+const triggerAutoSave = async (silent = false) => {
+  if (!window.picoBridge || !window.pico8_engine_ready) return;
+
+  const autoName = `Saves/${activeCartName.value}_auto.state`;
+  console.log(`[Player] Triggering Auto-Save to: ${autoName}`);
+
+  const success = await window.picoBridge.captureFullRAMState(autoName);
+  if (success && !silent) {
+    showToast("Auto-Saved");
+  }
+};
+
+const triggerManualSave = async () => {
   if (!window.FS) {
     showToast("Waiting for filesystem...");
     return;
   }
   showToast("Saving State...");
-  const start = performance.now();
-  const success = await window.picoBridge.captureFullRAMState();
-  const duration = Math.round(performance.now() - start);
 
-  if (success) {
-    showToast(`State Saved (${duration}ms)`);
-  } else {
-    showToast("Save Failed");
+  try {
+    // scan existing saves to find next index
+    const result = await Filesystem.readdir({
+      path: "Saves",
+      directory: Directory.Documents,
+    });
+
+    // pattern: cartname_manual_N.state
+    const base = activeCartName.value + "_manual_";
+    let maxIndex = 0;
+
+    result.files.forEach((f) => {
+      if (f.name.startsWith(base) && f.name.endsWith(".state")) {
+        const part = f.name.replace(base, "").replace(".state", "");
+        const num = parseInt(part);
+        if (!isNaN(num) && num > maxIndex) {
+          maxIndex = num;
+        }
+      }
+    });
+
+    const nextIndex = maxIndex + 1;
+    const saveName = `Saves/${base}${nextIndex}.state`;
+
+    const start = performance.now();
+    const success = await window.picoBridge.captureFullRAMState(saveName);
+    const duration = Math.round(performance.now() - start);
+
+    if (success) {
+      showToast(`Saved Slot #${nextIndex}`);
+    } else {
+      showToast("Save Failed");
+    }
+  } catch (e) {
+    console.error("Manual save scan failed", e);
+    // fallback
+    const fallbackName = `Saves/${activeCartName.value}_manual_fallback.state`;
+    await window.picoBridge.captureFullRAMState(fallbackName);
+    showToast("Saved (Fallback)");
   }
 };
 
-const triggerQuickLoad = async () => {
-  showToast("Loading State...");
-  const start = performance.now();
-  const success = await window.picoBridge.loadRAMState();
-  const duration = Math.round(performance.now() - start);
-
-  if (success) {
-    showToast(`State Loaded (${duration}ms)`);
-    isMenuOpen.value = false;
-  } else {
-    showToast("No Save Found");
-  }
-};
-
-const triggerSave = (silent = false) => {
-  // # silent background sync
-  if (window.FS) {
-    window.picoSave();
-  }
-  window.picoBridge.syncToNative();
-  if (!silent) showToast("Game Saved");
-};
-
-const triggerBrowse = () => {
-  if (filePicker.value) {
-    // ensure we accept .state files
-    filePicker.value.accept = ".p8d,.txt,.p8,.state";
-    filePicker.value.click();
-  } else {
-    console.error("File picker ref not found");
-  }
-};
-
+// # keyboard navigation
 const handleFileImport = async (event) => {
   const file = event.target.files[0];
   if (!file) return;
@@ -406,8 +428,7 @@ function resetGame() {
 async function exitGame() {
   // 0. Auto-Save RAM State
   if (window.picoBridge && window.pico8_engine_ready) {
-    showToast("Saving...");
-    await window.picoBridge.captureFullRAMState();
+    await triggerAutoSave(true); // silent
   }
 
   // 1. Save data (Async wait)
@@ -450,12 +471,6 @@ function hookPicoQuit() {
     };
   }
 }
-
-const showToast = (msg) => {
-  infoMessage.value = msg;
-  showInfo.value = true;
-  setTimeout(() => (showInfo.value = false), 2000);
-};
 
 // # keyboard navigation
 function handleGlobalKeydown(e) {

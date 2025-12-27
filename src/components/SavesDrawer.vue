@@ -9,7 +9,7 @@
     >
       <!-- header -->
       <div
-        class="h-16 flex items-center justify-between px-6 border-b border-white/10 bg-white/5"
+        class="flex items-center justify-between px-6 pb-4 border-b border-white/10 bg-white/5 pt-[calc(env(safe-area-inset-top)+1rem)]"
       >
         <h2 class="text-white font-bold tracking-wider font-pico text-lg">
           SAVES
