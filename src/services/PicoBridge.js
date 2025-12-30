@@ -567,7 +567,7 @@ class Pico8Bridge {
     return `Saves/${cleanName}_manual.state`;
   }
 
-  async captureFullRAMState() {
+  async captureFullRAMState(pathOverride = null) {
     try {
       if (!window.Module || !window.Module.HEAPU8)
         throw new Error("Emscripten not ready");
@@ -602,7 +602,9 @@ class Pico8Bridge {
 
       const b64 = await b64Promise;
 
-      const filename = this.getCleanStatePath(this.currentCartName);
+      // use provided path or generate default
+      const filename =
+        pathOverride || this.getCleanStatePath(this.currentCartName);
       console.log(
         `[pico_bridge] saving compressed state (${(
           b64.length /
