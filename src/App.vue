@@ -1,6 +1,6 @@
 <template>
   <div
-    class="antialiased min-h-screen bg-gradient-to-b from-gray-900 to-black text-white selection:bg-purple-500 selection:text-white"
+    class="antialiased min-h-screen bg-oled-dark text-white selection:bg-purple-500 selection:text-white"
   >
     <!-- global background effects -->
     <div v-if="isCheckingEngine" class="fixed inset-0 bg-black z-50"></div>

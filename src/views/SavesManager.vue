@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-[var(--color-oled-black)] text-white p-6 pt-16">
+  <div class="min-h-screen bg-oled-dark text-white p-6 pt-16">
     <!-- header -->
     <div class="flex items-center gap-4 mb-8">
       <button
@@ -22,7 +22,9 @@
           />
         </svg>
       </button>
-      <h1 class="text-3xl font-bold tracking-tight">Saved Data</h1>
+      <h1 class="text-3xl font-pico-crisp text-white drop-shadow-md">
+        Saved Data
+      </h1>
     </div>
 
     <div class="max-w-2xl mx-auto">

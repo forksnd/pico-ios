@@ -1,6 +1,6 @@
 <template>
   <div
-    class="h-screen w-screen overflow-y-auto bg-[var(--color-oled-black)] text-white p-6 pt-16"
+    class="h-screen w-screen overflow-y-auto bg-oled-dark text-white p-6 pt-16"
   >
     <!-- header -->
     <div class="flex items-center gap-4 mb-8">
@@ -24,7 +24,9 @@
           />
         </svg>
       </button>
-      <h1 class="text-3xl font-bold tracking-tight">Settings</h1>
+      <h1 class="text-3xl font-pico-crisp text-white drop-shadow-md">
+        Settings
+      </h1>
     </div>
 
     <div class="space-y-8 max-w-2xl mx-auto">

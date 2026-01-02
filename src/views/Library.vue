@@ -1,17 +1,7 @@
 <template>
   <div
-    class="min-h-screen bg-[var(--color-oled-black)] relative no-scrollbar transition-colors overflow-y-auto"
+    class="min-h-screen bg-pico-gradient relative no-scrollbar transition-colors overflow-y-auto"
   >
-    <!-- mesh gradient background -->
-    <div class="fixed inset-0 z-0 pointer-events-none">
-      <div
-        class="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-purple-800/60 rounded-full blur-[120px] mix-blend-screen animate-pulse-slow"
-      ></div>
-      <div
-        class="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-indigo-800/50 rounded-full blur-[100px] mix-blend-screen"
-      ></div>
-    </div>
-
     <!-- hidden file input -->
     <input
       type="file"
@@ -35,9 +25,7 @@
         <!-- title & actions -->
         <div class="flex justify-between items-center">
           <div class="flex flex-col">
-            <h1
-              class="text-3xl font-bold tracking-tight text-white/90 drop-shadow-sm"
-            >
+            <h1 class="text-3xl font-pico-crisp text-white drop-shadow-md">
               Library
             </h1>
             <span
@@ -224,7 +212,7 @@
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            class="w-12 h-12 mb-4 opacity-50 text-white"
+            class="w-12 h-12 mb-4 opacity-50 text-white pixelated"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -266,7 +254,7 @@
 
           <!-- empty state -->
           <div v-else>
-            <p class="text-white/60 font-medium">No cartridges found</p>
+            <p class="text-white/60 font-pico-crisp">No cartridges found</p>
             <p class="text-white/30 text-sm mt-1">
               Import a .p8.png cartridge to get started
             </p>
@@ -450,7 +438,7 @@
                 v-if="game.cover"
                 :src="game.cover"
                 alt="Cover"
-                class="w-full h-full object-cover opacity-90 transition-transform duration-500 group-hover:scale-110"
+                class="w-full h-full object-cover pixelated opacity-90 transition-transform duration-500 group-hover:scale-110"
               />
               <div
                 v-else

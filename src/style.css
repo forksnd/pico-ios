@@ -42,6 +42,105 @@
     text-transform: uppercase;
   }
 
+  /* headers */
+  .font-pico-crisp {
+    font-family: "PICO-8", monospace;
+    text-transform: uppercase;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+    font-smooth: never;
+    letter-spacing: 0.05em;
+  }
+
+  /* image rendering */
+  .pixelated {
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -webkit-crisp-edges;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+
+  /* library gradient */
+  .bg-pico-gradient {
+    background: linear-gradient(180deg, #1a0a2e 0%, #0d0015 40%, #000000 100%);
+    position: relative;
+    z-index: 0;
+  }
+
+  /* halftone pattern overlay */
+  .bg-pico-gradient::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+
+    background-image: radial-gradient(
+      circle,
+      rgba(255, 0, 77, 0.15) 2px,
+      transparent 2.5px
+    );
+    background-size: 12px 12px;
+
+    -webkit-mask-image: radial-gradient(
+      ellipse 100% 80% at 50% 0%,
+      black 0%,
+      transparent 70%
+    );
+    mask-image: radial-gradient(
+      ellipse 100% 80% at 50% 0%,
+      black 0%,
+      transparent 70%
+    );
+
+    pointer-events: none;
+  }
+
+  /* top left glow */
+  .bg-pico-gradient::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    background: radial-gradient(
+        circle at 0% 0%,
+        rgba(142, 45, 226, 0.15),
+        transparent 40%
+      ),
+      radial-gradient(circle at 100% 0%, rgba(255, 0, 77, 0.1), transparent 40%);
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+
+  /* OLED background w noise*/
+  .bg-oled-dark {
+    background: #000000;
+    position: relative;
+  }
+
+  /* subtle corner glow */
+  .bg-oled-dark::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      ellipse 40% 30% at 100% 100%,
+      rgba(90, 26, 74, 0.08) 0%,
+      transparent 80%
+    );
+  }
+
+  /* noise */
+  .bg-oled-dark::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+  }
+
   .backdrop-blur-xl {
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
