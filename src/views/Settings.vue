@@ -130,8 +130,8 @@ const settingsItems = computed(() => {
     {
       id: "swap",
       type: "toggle",
-      label: "Swap A/B Buttons",
-      subtext: "Switch the confirm/back button positions",
+      label: "Swap Action Buttons",
+      subtext: "Switch the O/X button positions",
       value: swapButtons.value,
       action: async () => {
         haptics.impact(ImpactStyle.Light);
@@ -142,7 +142,7 @@ const settingsItems = computed(() => {
       id: "joystick",
       type: "toggle",
       label: "Virtual Joystick",
-      subtext: "Show on-screen controls",
+      subtext: "Toggle between virtual joystick and D-pad",
       value: useJoystick.value,
       action: async () => {
         haptics.impact(ImpactStyle.Light);
@@ -153,7 +153,7 @@ const settingsItems = computed(() => {
       id: "haptics",
       type: "toggle",
       label: "Haptic Feedback",
-      subtext: "Vibrate on interactions",
+      subtext: "Toggle vibrations on device and controllers",
       value: hapticsEnabled.value,
       action: async () => {
         haptics.impact(ImpactStyle.Light);
@@ -164,7 +164,7 @@ const settingsItems = computed(() => {
       id: "fullscreen",
       type: "toggle",
       label: "Fullscreen",
-      subtext: "Hide valid status bars (Android only)",
+      subtext: "Hide on-screen controls",
       value: fullscreen.value,
       action: async () => {
         haptics.impact(ImpactStyle.Light);
@@ -183,8 +183,25 @@ const settingsItems = computed(() => {
     });
   }
 
+  items.push({
+    id: "rescan",
+    label: "Rescan Library",
+    subtext: "Refresh game list and cache",
+    type: "link",
+    action: handleRescan,
+  });
+
   return items;
 });
+
+const handleRescan = async () => {
+  if (confirm("Rescan library? This will refresh your game list.")) {
+    showToast("Scanning...");
+    await libraryStore.rescanLibrary();
+    haptics.success();
+    showToast("Library Updated");
+  }
+};
 
 async function pickAndroidDirectory() {
   haptics.impact(ImpactStyle.Light).catch(() => {});

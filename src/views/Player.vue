@@ -15,8 +15,9 @@
         :class="{ '!p-0 !pb-0': fullscreen }"
       >
         <canvas
-          class="aspect-square w-full h-full object-contain portrait:object-center landscape:object-center image-pixelated rounded-sm transition-shadow duration-300"
+          class="aspect-square w-full h-full object-contain portrait:object-center landscape:object-center image-pixelated rounded-sm"
           :class="{ 'shadow-2xl shadow-black/50': isMenuOpen }"
+          style="will-change: transform"
           id="canvas"
           oncontextmenu="event.preventDefault()"
           tabindex="-1"

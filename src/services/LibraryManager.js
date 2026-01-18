@@ -129,6 +129,14 @@ export class LibraryManager {
       if (cached) {
         try {
           this.games = JSON.parse(cached);
+
+          // fix expired blobs
+          this.games.forEach((g) => {
+            if (g.cover && g.cover.startsWith("blob:")) {
+              g.cover = null;
+            }
+          });
+
           console.log(
             `[LibraryManager] Loaded ${this.games.length} games from cache.`
           );
@@ -140,6 +148,8 @@ export class LibraryManager {
       // if no cache, scan
       if (this.games.length === 0) {
         await this.scan();
+      } else {
+        console.log("[LibraryManager] Skipping initial scan (cache hit)");
       }
 
       this.initialized = true;
@@ -192,6 +202,8 @@ export class LibraryManager {
 
     // clear cache when changing root
     localStorage.removeItem("pico_cached_games");
+    // clear mem
+    this.games = [];
 
     // re-init / re-scan
     this.initialized = false;
@@ -203,8 +215,10 @@ export class LibraryManager {
     // legacy cleanup logic removed
   }
 
+  // updates state only on success
   async scan() {
     const isWeb = Capacitor.getPlatform() === "web";
+    console.log("[LibraryManager] starting explicit scan...");
 
     // Build hidden carts
     const hiddenCarts = new Set();
@@ -213,7 +227,7 @@ export class LibraryManager {
         meta.subCarts.forEach((sc) => hiddenCarts.add(sc));
     });
 
-    let games = [];
+    let newGames = [];
     let source = "legacy";
 
     // list files
@@ -225,7 +239,7 @@ export class LibraryManager {
           folder: this.scopedFolder,
         });
         if (result && result.entries) {
-          games = result.entries
+          newGames = result.entries
             .filter(
               (f) =>
                 !f.isDir &&
@@ -261,7 +275,7 @@ export class LibraryManager {
           path: scanPath,
           directory: getAppDataDir(),
         });
-        games = result.files
+        newGames = result.files
           .filter((f) => f.name.endsWith(".p8.png") || f.name.endsWith(".p8"))
           .filter((f) => !hiddenCarts.has(f.name))
           .map((file) => {
@@ -289,15 +303,15 @@ export class LibraryManager {
     }
 
     console.log(
-      `[LibraryManager] List complete: ${games.length} games. Starting lazy cover load.`
+      `[LibraryManager] List complete: ${newGames.length} games. Committing to state.`
     );
-    games.sort((a, b) => (b.lastPlayed || 0) - (a.lastPlayed || 0));
-    this.games = games;
+    newGames.sort((a, b) => (b.lastPlayed || 0) - (a.lastPlayed || 0));
+
+    // atomic commit
+    this.games = newGames;
     localStorage.setItem("pico_cached_games", JSON.stringify(this.games));
 
-    // kick off lazy load
-
-    return games;
+    return this.games;
   }
 
   async loadCovers(games) {

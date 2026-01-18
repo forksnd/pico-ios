@@ -123,28 +123,18 @@ class Pico8Bridge {
           window.pico8_poller = setInterval(async () => {
             pollCount++;
 
+            // if engine is already running stop polling
+            if (window.p8_is_running && window.pico8_engine_ready) {
+              console.log("[pico_boot] engine running stable, killing poller.");
+              clearInterval(window.pico8_poller);
+              window.pico8_poller = null;
+              return;
+            }
+
             // the one true fs check
             const mod = window.Module;
             const engineReady =
               mod && mod.FS && typeof mod.callMain === "function";
-
-            // aggressive cleanup: if engine is already running, stop polling
-            if (
-              window.p8_is_running &&
-              window.pico8_engine_ready &&
-              !window._bbs_cartdat &&
-              !window._cartdat
-            ) {
-              // wait a few cycles to ensure transition, then kill
-              if (pollCount > 100) {
-                console.log(
-                  "[pico_boot] engine running stable, killing poller."
-                );
-                clearInterval(window.pico8_poller);
-                window.pico8_poller = null;
-                return;
-              }
-            }
 
             let fs = null;
             if (engineReady) {
@@ -436,61 +426,69 @@ class Pico8Bridge {
   }
 
   async syncToNative() {
-    try {
-      const fs = window.Module && window.Module.FS;
-      const savesDir = "/appdata";
-
-      // critical filesystem check
-      if (!fs || !fs.analyzePath || !window.pico8_engine_ready) {
-        console.warn("[warning] sync_to_native skipped (fs not ready)");
-        return;
-      }
-
+    // run via idlecallback to prevent game thread blocking
+    const runSync = async () => {
       try {
-        fs.stat(savesDir);
-      } catch (e) {
-        return;
-      }
+        const fs = window.Module && window.Module.FS;
+        const savesDir = "/appdata";
 
-      const files = fs.readdir(savesDir);
-      // optimization: process non-blocking
-      const processFile = async (file) => {
-        if (file === "." || file === "..") return;
+        // critical filesystem check
+        if (!fs || !fs.analyzePath || !window.pico8_engine_ready) {
+          console.warn("[warning] sync_to_native skipped (fs not ready)");
+          return;
+        }
 
-        return new Promise((resolve) => {
-          // schedule on idle or minimal timeout
-          const scheduler = window.requestIdleCallback || setTimeout;
-          scheduler(async () => {
-            try {
-              const path = `${savesDir}/${file}`;
-              const data = fs.readFile(path);
-              const base64 =
-                typeof data === "string"
-                  ? btoa(data)
-                  : btoa(String.fromCharCode.apply(null, data));
+        try {
+          fs.stat(savesDir);
+        } catch (e) {
+          return;
+        }
 
-              await Filesystem.writeFile({
-                path: `Saves/${file}`,
-                data: base64,
-                directory: Directory.Documents,
-                encoding: "base64",
-                recursive: true,
-              });
-              resolve();
-            } catch (e) {
-              console.warn(`failed to sync ${file}`, e);
-              resolve(); // proceed anyway
-            }
+        const files = fs.readdir(savesDir);
+        // optimization: process non-blocking
+        const processFile = async (file) => {
+          if (file === "." || file === "..") return;
+
+          return new Promise((resolve) => {
+            // nested schedule to breathe
+            setTimeout(async () => {
+              try {
+                const path = `${savesDir}/${file}`;
+                const data = fs.readFile(path);
+                const base64 =
+                  typeof data === "string"
+                    ? btoa(data)
+                    : btoa(String.fromCharCode.apply(null, data));
+
+                await Filesystem.writeFile({
+                  path: `Saves/${file}`,
+                  data: base64,
+                  directory: Directory.Documents,
+                  encoding: "base64",
+                  recursive: true,
+                });
+                resolve();
+              } catch (e) {
+                console.warn(`failed to sync ${file}`, e);
+                resolve();
+              }
+            }, 0);
           });
-        });
-      };
+        };
 
-      // serial execution to prevent memory spiking
-      for (const file of files) {
-        await processFile(file);
+        // serial execution to prevent memory spiking
+        for (const file of files) {
+          await processFile(file);
+        }
+      } catch (e) {
+        console.warn("syncToNative failed", e);
       }
-    } catch (e) {
-      console.warn("syncToNative failed", e);
+    };
+
+    if (window.requestIdleCallback) {
+      window.requestIdleCallback(runSync);
+    } else {
+      setTimeout(runSync, 100);
     }
   }
 

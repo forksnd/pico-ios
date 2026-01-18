@@ -87,8 +87,21 @@ export const useLibraryStore = defineStore("library", () => {
     try {
       await libraryManager.init();
       rootDir.value = libraryManager.rootDir; // sync state
-      rawGames.value = await libraryManager.scan();
-      libraryManager.loadCovers(rawGames.value);
+
+      // cache first
+      if (libraryManager.games.length > 0) {
+        console.log(
+          `[useLibraryStore] Using ${libraryManager.games.length} cached games. Skipping scan.`
+        );
+        rawGames.value = libraryManager.games;
+        // trigger background image load
+        libraryManager.loadCovers(rawGames.value);
+      } else {
+        console.log("[useLibraryStore] Cache empty. Performing initial scan.");
+        rawGames.value = await libraryManager.scan();
+        libraryManager.loadCovers(rawGames.value);
+      }
+
       return rawGames.value;
     } catch (e) {
       error.value = e.message;
@@ -210,6 +223,7 @@ export const useLibraryStore = defineStore("library", () => {
     };
 
     try {
+      console.log("[useLibraryStore] Force rescan requested.");
       rawGames.value = await libraryManager.scan();
       libraryManager.loadCovers(rawGames.value);
       return true;
