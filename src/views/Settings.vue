@@ -128,7 +128,7 @@
       <!-- app info -->
       <section class="pt-8 flex flex-col items-center opacity-30">
         <p class="text-[10px] font-mono uppercase tracking-widest">
-          Pocket8 v1.6.1
+          Pocket8 v1.6.2
         </p>
       </section>
     </div>
