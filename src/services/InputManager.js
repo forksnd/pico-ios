@@ -401,8 +401,7 @@ class InputManagerService {
       this.emitChange("menu", buf.select);
 
       if (window.pico8_gpio) {
-        const picoMenuRequested =
-          buf.start || this.keys["Enter"] || this.keys["p"] || this.keys["P"];
+        const picoMenuRequested = (this._currentState & PicoButton.PAUSE) !== 0 || buf.start;
         window.pico8_gpio[0] = picoMenuRequested ? 1 : 0;
       }
     }
@@ -410,13 +409,14 @@ class InputManagerService {
     else {
       // nav
       const isTyping = document.activeElement?.tagName === "INPUT";
+      const mask = this._keyMask | this._virtualMask;
 
-      this.handleNavInput("nav-up", buf.up);
-      this.handleNavInput("nav-down", buf.down);
+      this.handleNavInput("nav-up", (mask & PicoButton.UP) !== 0);
+      this.handleNavInput("nav-down", (mask & PicoButton.DOWN) !== 0);
 
       if (!isTyping) {
-        this.handleNavInput("nav-left", buf.left);
-        this.handleNavInput("nav-right", buf.right);
+        this.handleNavInput("nav-left",(mask & PicoButton.LEFT) !== 0);
+        this.handleNavInput("nav-right", (mask & PicoButton.RIGHT) !== 0);
       }
 
       // confirm / back
@@ -434,13 +434,12 @@ class InputManagerService {
 
       // keyboard
       if (
-        this.keys["z"] ||
-        this.keys["Z"] ||
+        (mask & PicoButton.O) !== 0 ||
         this.keys["Enter"] ||
         this.keys[" "]
       )
         confirm = true;
-      if (this.keys["x"] || this.keys["X"] || this.keys["Escape"]) back = true;
+      if ((mask & PicoButton.X !== 0) || this.keys["Escape"]) back = true;
 
       this.emitChange("confirm", confirm);
       this.emitChange("back", back);

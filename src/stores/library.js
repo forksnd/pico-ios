@@ -21,10 +21,8 @@ export const useLibraryStore = defineStore("library", () => {
     localStorage.getItem("pico_haptics_enabled") !== "false"
   ); // default true
   const rootDir = ref(localStorage.getItem("pico_root_dir") || "");
-  const keymap = ref({
-    ...DEFAULT_KEYMAP,
-    ...loadKeymap(),
-  });
+  const savedKeymap = loadKeymap();
+  const keymap = ref(savedKeymap ?? DEFAULT_KEYMAP);
 
   function loadKeymap() {
     try {

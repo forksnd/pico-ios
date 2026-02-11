@@ -86,9 +86,15 @@
     <!-- Actions -->
     <div class="space-y-4 max-w-xl mx-auto">
       <div
-        v-for="action in actions"
-        :key="action.bit"
+        v-for="(action, index) in actions"
+        :key="action.id"
+        :ref="(el) => setItemRef(el, index)"
+
         class="p-4 bg-white/5 rounded-xl border border-white/10"
+        :class="{
+          '!bg-white/20 !border-white/40 ring-2 ring-white/50 scale-[1.02]':
+            focusedIndex === index,
+        }"
       >
         <div class="flex items-center justify-between mb-3">
           <span class="font-medium">{{ action.name }}</span>
@@ -137,22 +143,24 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import { ref, onMounted, onBeforeUnmount } from "vue";
 import { useLibraryStore } from "../stores/library";
 import { PicoButton } from "../services/InputManager";
+import { inputManager } from "../services/InputManager";
+import { useRouter } from "vue-router";
+import { useFocusable } from "../composables/useFocusable";
 
 const store = useLibraryStore();
 const headerFocused = ref(false);
-
+const router = useRouter();
 const actions = [
-  { name: "Left", bit: PicoButton.LEFT },
-  { name: "Right", bit: PicoButton.RIGHT },
-  { name: "Up", bit: PicoButton.UP },
-  { name: "Down", bit: PicoButton.DOWN },
-
-  { name: "Button O", bit: PicoButton.O },
-  { name: "Button X", bit: PicoButton.X },
-  { name: "Pause", bit: PicoButton.PAUSE },
+  { id: "left", name: "Left", bit: PicoButton.LEFT },
+  { id: "right", name: "Right", bit: PicoButton.RIGHT },
+  { id: "up", name: "Up", bit: PicoButton.UP },
+  { id: "down", name: "Down", bit: PicoButton.DOWN },
+  { id: "o", name: "Button O", bit: PicoButton.O },
+  { id: "x", name: "Button X", bit: PicoButton.X },
+  { id: "pause", name: "Pause", bit: PicoButton.PAUSE },
 ];
 
 const listeningFor = ref(null); // bit or null
@@ -220,12 +228,29 @@ const onKeyDown = (e) => {
   stopListening();
 };
 
+// focusable
+const { focusedIndex, setItemRef } = useFocusable({
+  items: actions,
+  onSelect: (item) => startListening(item.bit),
+  onBack: () => router.back(),
+});
+
+const listenerCleanup = ref(null);
+
 onMounted(() => {
   window.addEventListener("keydown", onKeyDown, true);
+  listenerCleanup.value = inputManager.addListener((action) => {
+    if (action === "back") {
+      router.back();
+    } else if (action === "menu") {
+      router.back();
+    }
+  });
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", onKeyDown, true);
+  if (listenerCleanup.value) listenerCleanup.value();
 });
 
 const getActionBindings = (bit) => {
