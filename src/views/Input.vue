@@ -136,7 +136,7 @@
         @click="reset"
         class="w-full flex items-center justify-center gap-2 p-4 bg-red-500/10 border border-red-500/30 text-red-400 font-medium rounded-xl active:bg-red-500/20 transition-all"
       >
-        Reset to default
+        Restore defaults
       </button>
     </div>
   </div>
