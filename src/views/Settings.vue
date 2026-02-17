@@ -234,6 +234,13 @@ const settingsItems = computed(() => {
     action: handleRescan,
   });
 
+  items.push({
+    id: "input",
+    label: "Input",
+    subtext: "Change keyboard controls",
+    type: "link",
+    action: goToKeymap,
+  });
   return items;
 });
 
@@ -349,4 +356,8 @@ onMounted(() => {
 onUnmounted(() => {
   if (listenerCleanup.value) listenerCleanup.value();
 });
+
+async function goToKeymap() {
+  router.push({ name: "input" });
+};
 </script>

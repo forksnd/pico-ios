@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { libraryManager } from "../services/LibraryManager";
+import { DEFAULT_KEYMAP, PicoButton } from "../services/InputManager";
 
 export const useLibraryStore = defineStore("library", () => {
   // state
@@ -14,12 +15,65 @@ export const useLibraryStore = defineStore("library", () => {
   const sortBy = ref("lastPlayed"); // 'lastPlayed', 'name'
   const swapButtons = ref(localStorage.getItem("pico_swap_buttons") === "true");
   const useJoystick = ref(
-    localStorage.getItem("pico_use_joystick") !== "false",
+    localStorage.getItem("pico_use_joystick") !== "false"
   ); // default true
   const hapticsEnabled = ref(
-    localStorage.getItem("pico_haptics_enabled") !== "false",
+    localStorage.getItem("pico_haptics_enabled") !== "false"
   ); // default true
   const rootDir = ref(localStorage.getItem("pico_root_dir") || "");
+  const savedKeymap = loadKeymap();
+  const keymap = ref(savedKeymap ?? DEFAULT_KEYMAP);
+
+  function loadKeymap() {
+    try {
+      const raw = localStorage.getItem("pico_keymap");
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  }
+
+  const saveKeymap = () => {
+    localStorage.setItem("pico_keymap", JSON.stringify(keymap.value));
+  };
+
+  const bindKey = (code, mask, { append = false } = {}) => {
+    if (append) {
+      // ADDITIVE (for diagonals / multi-bind)
+      keymap.value[code] = (keymap.value[code] ?? 0) | mask;
+    } else {
+      // OVERRIDE
+      keymap.value[code] = mask;
+    }
+
+    saveKeymap();
+  };
+
+  const unbindKey = (code, mask) => {
+    if (!keymap.value[code]) return;
+
+    keymap.value[code] &= ~mask;
+    if (keymap.value[code] === 0) {
+      delete keymap.value[code];
+    }
+    saveKeymap();
+  };
+
+  const resetKeymap = () => {
+    keymap.value = { ...DEFAULT_KEYMAP };
+    saveKeymap();
+  };
+
+  const getActionBindings = (bit) =>
+    Object.entries(keymap.value ?? {}).filter(([, mask]) => (mask & bit) !== 0);
+
+  const getKeyBindings = (code) => {
+    const mask = keymap.value?.[code] ?? 0;
+
+    return Object.entries(PicoButton)
+      .filter(([, bit]) => (mask & bit) !== 0)
+      .map(([name]) => name);
+  };
 
   const toggleSwapButtons = () => {
     swapButtons.value = !swapButtons.value;
@@ -91,14 +145,14 @@ export const useLibraryStore = defineStore("library", () => {
       // cache first
       if (libraryManager.games.length > 0 && !forceRefresh) {
         console.log(
-          `[useLibraryStore] Using ${libraryManager.games.length} cached games. Skipping scan.`,
+          `[useLibraryStore] Using ${libraryManager.games.length} cached games. Skipping scan.`
         );
         rawGames.value = libraryManager.games;
         // trigger background image load
         libraryManager.loadCovers(rawGames.value);
       } else {
         console.log(
-          "[useLibraryStore] Cache empty or force refresh. Scanning...",
+          "[useLibraryStore] Cache empty or force refresh. Scanning..."
         );
         rawGames.value = await libraryManager.scan();
         libraryManager.loadCovers(rawGames.value);
@@ -154,7 +208,7 @@ export const useLibraryStore = defineStore("library", () => {
     // backend uses filename
     const success = await libraryManager.deleteCartridge(
       filename,
-      deleteExternalFile,
+      deleteExternalFile
     );
     if (success) {
       // optimistic update
@@ -186,7 +240,7 @@ export const useLibraryStore = defineStore("library", () => {
     // use filename for metadata lookup
     const success = await libraryManager.renameCartridge(
       game.filename,
-      newName,
+      newName
     );
     if (success) {
       // update local state
@@ -293,5 +347,12 @@ export const useLibraryStore = defineStore("library", () => {
       rawGames.value = libraryManager.games;
       return res;
     },
+    // input
+    keymap,
+    bindKey,
+    unbindKey,
+    resetKeymap,
+    getActionBindings,
+    getKeyBindings,
   };
 });

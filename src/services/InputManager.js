@@ -2,6 +2,30 @@ import { reactive, watch } from "vue";
 import { useLibraryStore } from "../stores/library";
 import { Capacitor } from "@capacitor/core";
 
+export const PicoButton = Object.freeze({
+  LEFT:   1 << 0,
+  RIGHT:  1 << 1,
+  UP:     1 << 2,
+  DOWN:   1 << 3,
+  O:      1 << 4,
+  X:      1 << 5,
+  PAUSE:  1 << 6,
+});
+
+export const DEFAULT_KEYMAP = {
+  ArrowLeft: PicoButton.LEFT,
+  ArrowRight: PicoButton.RIGHT,
+  ArrowUp: PicoButton.UP,
+  ArrowDown: PicoButton.DOWN,
+  KeyZ: PicoButton.O,
+  KeyC: PicoButton.O,
+  KeyN: PicoButton.O,
+  KeyX: PicoButton.X,
+  KeyV: PicoButton.X,
+  KeyM: PicoButton.X,
+  Enter: PicoButton.PAUSE,
+};
+
 class InputManagerService {
   constructor() {
     this.state = reactive({
@@ -21,6 +45,7 @@ class InputManagerService {
       back: false,
       start: false,
     };
+    this.keymap = DEFAULT_KEYMAP;
 
     // STATIC BUFFERS
     this._inputBuffer = {
@@ -69,6 +94,7 @@ class InputManagerService {
     // sync initial settings & watch for changes
     const store = useLibraryStore();
     this.swapButtons = store.swapButtons;
+    this.keymap = store.keymap;
 
     // watch store for swap changes (avoids polling store in loop)
     watch(
@@ -202,44 +228,13 @@ class InputManagerService {
 
     if (isInput) return;
 
-    let bit = 0;
+    const mask = this.keymap[e.code];
+    if (!mask) return;
 
-    // map keys to PICO-8 bits
-    switch (e.code) {
-      case "ArrowLeft":
-        bit = 1;
-        break;
-      case "ArrowRight":
-        bit = 2;
-        break;
-      case "ArrowUp":
-        bit = 4;
-        break;
-      case "ArrowDown":
-        bit = 8;
-        break;
-      case "KeyZ":
-      case "KeyC":
-      case "KeyN":
-        bit = 16;
-        break; // O
-      case "KeyX":
-      case "KeyV":
-      case "KeyM":
-        bit = 32;
-        break; // X
-      case "Enter":
-        bit = 64;
-        break; // pause
-    }
+    if (e.type === "keydown") this._keyMask |= mask;
+    else this._keyMask &= ~mask;
 
-    if (bit > 0) {
-      if (e.type === "keydown") this._keyMask |= bit;
-      else this._keyMask &= ~bit;
-
-      // instant write: don't wait for poll loop
-      this.syncState();
-    }
+    this.syncState();
   }
 
   destroy() {
@@ -272,12 +267,12 @@ class InputManagerService {
 
     if (this.state.inputMode === "GAME") {
       const bit = {
-        37: 1, // left
-        39: 2, // right
-        38: 4, // up
-        40: 8, // down
-        90: 16, // z = O
-        88: 32, // x = X
+        37: PicoButton.LEFT,
+        39: PicoButton.RIGHT,
+        38: PicoButton.UP,
+        40: PicoButton.DOWN,
+        90: PicoButton.O, // z
+        88: PicoButton.X, // x
       }[keyCode];
 
       if (bit !== undefined) {
@@ -406,8 +401,7 @@ class InputManagerService {
       this.emitChange("menu", buf.select);
 
       if (window.pico8_gpio) {
-        const picoMenuRequested =
-          buf.start || this.keys["Enter"] || this.keys["p"] || this.keys["P"];
+        const picoMenuRequested = (this._currentState & PicoButton.PAUSE) !== 0 || buf.start;
         window.pico8_gpio[0] = picoMenuRequested ? 1 : 0;
       }
     }
@@ -415,13 +409,14 @@ class InputManagerService {
     else {
       // nav
       const isTyping = document.activeElement?.tagName === "INPUT";
+      const mask = this._keyMask | this._virtualMask;
 
-      this.handleNavInput("nav-up", buf.up);
-      this.handleNavInput("nav-down", buf.down);
+      this.handleNavInput("nav-up", (mask & PicoButton.UP) !== 0);
+      this.handleNavInput("nav-down", (mask & PicoButton.DOWN) !== 0);
 
       if (!isTyping) {
-        this.handleNavInput("nav-left", buf.left);
-        this.handleNavInput("nav-right", buf.right);
+        this.handleNavInput("nav-left",(mask & PicoButton.LEFT) !== 0);
+        this.handleNavInput("nav-right", (mask & PicoButton.RIGHT) !== 0);
       }
 
       // confirm / back
@@ -439,13 +434,12 @@ class InputManagerService {
 
       // keyboard
       if (
-        this.keys["z"] ||
-        this.keys["Z"] ||
+        (mask & PicoButton.O) !== 0 ||
         this.keys["Enter"] ||
         this.keys[" "]
       )
         confirm = true;
-      if (this.keys["x"] || this.keys["X"] || this.keys["Escape"]) back = true;
+      if ((mask & PicoButton.X !== 0) || this.keys["Escape"]) back = true;
 
       this.emitChange("confirm", confirm);
       this.emitChange("back", back);
