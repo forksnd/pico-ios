@@ -5,6 +5,10 @@
   <h2>Pocket8 • The native PICO-8 Companion for iOS.</h2>
 
   <p>
+    <a href="https://apps.apple.com/us/app/pocket8/id6758171942">
+      📱 Download on the App Store
+    </a>
+    &nbsp;•&nbsp;
     <a href="https://github.com/jevonlipsey/pico-ios/releases/latest">
       ⬇️ Download the latest build
     </a>
